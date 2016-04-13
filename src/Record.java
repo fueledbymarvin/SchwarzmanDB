@@ -1,5 +1,7 @@
 import java.io.File;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.List;
 
 /**
  * Created by Frank on 4/12/16.
@@ -15,17 +17,18 @@ public class Record {
         this.values = values;
     }
 
-    public getRecord(Table table, int id, List<String> columns) {
+    public Record getRecord(Table table, int id, List<String> columns) {
 
-        Set<String> needsPrimary;
-        Set<String> needsSecondary;
+        Set<String> needsPrimary = new LinkedHashSet<>();
+        Set<String> needsSecondary = new LinkedHashSet<>();
         for (String col : columns) {
-            if (isPrimaryCol(col)) {
+            if (table.isPrimary(col)) {
                 needsPrimary.add(col);
-            } else if (isSecondaryCol(col)) {
+            } else if (table.isSecondary(col)) {
                 needsSecondary.add(col);
             }
             // Should we throw an error if it's an invalid col?
         }
+        return new Record(id, columns.get(0));
     }
 }
