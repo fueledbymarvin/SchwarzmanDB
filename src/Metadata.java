@@ -21,9 +21,7 @@ public class Metadata {
         if (!metadata.exists()) {
             metadata.createNewFile();
         }
-        if (!readData()) {
-            throw new IllegalArgumentException("Metadata not formatted properly");
-        }
+        readData();
     }
 
     public Table get(String table) {
@@ -33,54 +31,82 @@ public class Metadata {
 
     public void createTable(String name, List<String> columns) throws IOException {
 
-        Set<String> primary = new LinkedHashSet<>();
+        List<String> primary = new ArrayList<>();
+        Map<String, Usage> colUsage = new HashMap<>();
         for (String col : columns) {
             primary.add(col);
+            colUsage.put(col, new Usage(0));
         }
-        Table table = new Table(name, primary, new LinkedHashSet<String>(), name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX);
+        Table table = new Table(name, primary, new ArrayList<String>(), name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, colUsage);
+        tables.put(name, table);
         Writer out = new FileWriter(metadata, true);
         out.write(table.toString());
         out.close();
     }
 
-    private boolean readData() throws IOException {
+    private void readData() throws IOException {
+        
+        try (BufferedReader in = new BufferedReader(new FileReader(metadata))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                String name = line;
+                Map<String, Usage> colUsage = new HashMap<>();
 
-        BufferedReader in = new BufferedReader(new FileReader(metadata));
-        String line;
-        while ((line = in.readLine()) != null) {
-            String name = line;
-            line = in.readLine();
-            if (line == null) {
-                in.close();
-                return false;
+                line = in.readLine();
+                if (line == null) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                List<String> primary = readColumns(line);
+                line = in.readLine();
+                if (line == null) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                List<String> primaryUsage = readColumns(line);
+                if (primary.size() != primaryUsage.size()) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                for (int i = 0; i < primary.size(); i++) {
+                    colUsage.put(primary.get(i), new Usage(Double.parseDouble(primaryUsage.get(i))));
+                }
+
+                line = in.readLine();
+                if (line == null) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                List<String> secondary = readColumns(line);
+                line = in.readLine();
+                if (line == null) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                List<String> secondaryUsage = readColumns(line);
+                if (secondary.size() != secondaryUsage.size()) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                for (int i = 0; i < secondary.size(); i++) {
+                    colUsage.put(secondary.get(i), new Usage(Double.parseDouble(secondaryUsage.get(i))));
+                }
+
+                Table table = new Table(name, primary, secondary, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, colUsage);
+                tables.put(name, table);
             }
-            Set<String> primary = readColumns(line);
-            line = in.readLine();
-            if (line == null) {
-                in.close();
-                return false;
-            }
-            Set<String> secondary = readColumns(line);
-            Table table = new Table(name, primary, secondary, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX);
-            tables.put(name, table);
         }
-        in.close();
-        return true;
     }
 
-    private Set<String> readColumns(String line) {
+    private List<String> readColumns(String line) {
 
-        Set<String> columns = new LinkedHashSet<>();
-        int commaIndex;
-        while ((commaIndex = line.indexOf(',')) != -1) {
-            columns.add(line.substring(0, commaIndex));
-            if (commaIndex + 1 == line.length()) {
-                // trailing comma for some reason
-                return columns;
+        List<String> columns = new ArrayList<>();
+        if (!line.isEmpty()) {
+            int commaIndex;
+            while ((commaIndex = line.indexOf(',')) != -1) {
+                columns.add(line.substring(0, commaIndex));
+                if (commaIndex + 1 == line.length()) {
+                    // trailing comma for some reason
+                    return columns;
+                }
+                line = line.substring(commaIndex + 1);
             }
-            line = line.substring(commaIndex + 1);
+            columns.add(line);
         }
-        columns.add(line);
         return columns;
     }
 }

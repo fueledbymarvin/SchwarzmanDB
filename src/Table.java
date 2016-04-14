@@ -1,4 +1,7 @@
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -7,17 +10,19 @@ import java.util.Set;
 public class Table {
 
     String name;
-    Set<String> primaryCols;
-    Set<String> secondaryCols;
+    List<String> primaryCols;
+    List<String> secondaryCols;
+    Map<String, Usage> colUsage;
     File primary, secondary;
 
-    public Table(String name, Set<String> primaryCols, Set<String> secondaryCols, String primary, String secondary) {
+    public Table(String name, List<String> primaryCols, List<String> secondaryCols, String primary, String secondary, Map<String, Usage> colUsage) {
 
         this.name = name;
         this.primaryCols = primaryCols;
         this.secondaryCols = secondaryCols;
         this.primary = new File(primary);
         this.secondary = new File(secondary);
+        this.colUsage = colUsage;
     }
 
     public boolean isPrimary(String col) {
@@ -30,11 +35,11 @@ public class Table {
         return secondaryCols.contains(col);
     }
 
-    public Set<String> getPrimaryCols() {
+    public List<String> getPrimaryCols() {
         return primaryCols;
     }
 
-    public Set<String> getSecondaryCols() {
+    public List<String> getSecondaryCols() {
         return secondaryCols;
     }
 
@@ -46,27 +51,51 @@ public class Table {
         return secondary;
     }
 
+    public void used(List<String> columns) {
+
+        for (String col : columns) {
+            colUsage.get(col).increment();
+        }
+    }
+
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append("\n");
-        if (!primaryCols.isEmpty()) {
-            for (String col : primaryCols) {
-                sb.append(col);
-                sb.append(",");
-            }
-            sb.deleteCharAt(sb.length() - 1);
-        }
+        sb.append(join(primaryCols, ","));
         sb.append("\n");
-        if (!secondaryCols.isEmpty()) {
-            for (String col : secondaryCols) {
-                sb.append(col);
-                sb.append(",");
-            }
-            sb.deleteCharAt(sb.length() - 1);
+        List<String> primaryUsage = new ArrayList<>();
+        for (String col : primaryCols) {
+            String usage = String.format("%f", colUsage.get(col).getUsage());
+            primaryUsage.add(usage);
         }
+        sb.append(join(primaryUsage, ","));
         sb.append("\n");
+        sb.append(join(secondaryCols, ","));
+        sb.append("\n");
+        List<String> secondaryUsage = new ArrayList<>();
+        for (String col : secondaryCols) {
+            String usage = String.format("%f", colUsage.get(col).getUsage());
+            secondaryUsage.add(usage);
+        }
+        sb.append(join(secondaryUsage, ","));
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    private String join(List<String> strs, String delim) {
+
+        StringBuilder sb = new StringBuilder();
+        if (!strs.isEmpty()) {
+            for (String str : strs) {
+                sb.append(str);
+                sb.append(delim);
+            }
+            for (int i = 0; i < delim.length(); i++) {
+                sb.deleteCharAt(sb.length() - 1 - i);
+            }
+        }
         return sb.toString();
     }
 }
