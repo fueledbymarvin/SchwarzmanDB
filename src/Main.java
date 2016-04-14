@@ -15,6 +15,6 @@ public class Main {
 //        columns.add("last_name");
 //        metadata.createTable("people", columns);
         Table table = metadata.get("people");
-        System.out.println(table.getPrimaryCols());
+        System.out.println(table.isPrimary("first_name"));
     }
 }

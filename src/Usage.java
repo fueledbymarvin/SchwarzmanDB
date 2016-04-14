@@ -17,14 +17,10 @@ public class Usage {
         useCount++;
     }
 
-    public void update(double alpha) {
+    public void update(double freshness) {
 
-        usage = usage*(1-alpha) + alpha*useCount;
+        usage = usage*(1-freshness) + freshness*useCount;
         useCount = 0;
-    }
-
-    public int getUseCount() {
-        return useCount;
     }
 
     public double getUsage() {

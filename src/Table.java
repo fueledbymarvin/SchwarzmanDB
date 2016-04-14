@@ -9,38 +9,26 @@ import java.util.Set;
  */
 public class Table {
 
-    String name;
-    List<String> primaryCols;
-    List<String> secondaryCols;
-    Map<String, Usage> colUsage;
-    File primary, secondary;
+    private String name;
+    private File primary, secondary;
+    private TableUsage tableUsage;
 
-    public Table(String name, List<String> primaryCols, List<String> secondaryCols, String primary, String secondary, Map<String, Usage> colUsage) {
+    public Table(String name, String primary, String secondary, TableUsage tableUsage) {
 
         this.name = name;
-        this.primaryCols = primaryCols;
-        this.secondaryCols = secondaryCols;
         this.primary = new File(primary);
         this.secondary = new File(secondary);
-        this.colUsage = colUsage;
+        this.tableUsage = tableUsage;
     }
 
     public boolean isPrimary(String col) {
 
-        return primaryCols.contains(col);
+        return tableUsage.isPrimary(col);
     }
 
     public boolean isSecondary(String col) {
 
-        return secondaryCols.contains(col);
-    }
-
-    public List<String> getPrimaryCols() {
-        return primaryCols;
-    }
-
-    public List<String> getSecondaryCols() {
-        return secondaryCols;
+        return !isPrimary(col);
     }
 
     public File getPrimary() {
@@ -51,11 +39,10 @@ public class Table {
         return secondary;
     }
 
-    public void used(List<String> columns) {
+    public boolean used(List<String> columns) {
 
-        for (String col : columns) {
-            colUsage.get(col).increment();
-        }
+        // Should do something if this returns true
+        return tableUsage.used(columns);
     }
 
     public String toString() {
@@ -63,39 +50,7 @@ public class Table {
         StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append("\n");
-        sb.append(join(primaryCols, ","));
-        sb.append("\n");
-        List<String> primaryUsage = new ArrayList<>();
-        for (String col : primaryCols) {
-            String usage = String.format("%f", colUsage.get(col).getUsage());
-            primaryUsage.add(usage);
-        }
-        sb.append(join(primaryUsage, ","));
-        sb.append("\n");
-        sb.append(join(secondaryCols, ","));
-        sb.append("\n");
-        List<String> secondaryUsage = new ArrayList<>();
-        for (String col : secondaryCols) {
-            String usage = String.format("%f", colUsage.get(col).getUsage());
-            secondaryUsage.add(usage);
-        }
-        sb.append(join(secondaryUsage, ","));
-        sb.append("\n");
-        return sb.toString();
-    }
-
-    private String join(List<String> strs, String delim) {
-
-        StringBuilder sb = new StringBuilder();
-        if (!strs.isEmpty()) {
-            for (String str : strs) {
-                sb.append(str);
-                sb.append(delim);
-            }
-            for (int i = 0; i < delim.length(); i++) {
-                sb.deleteCharAt(sb.length() - 1 - i);
-            }
-        }
+        sb.append(tableUsage.toString());
         return sb.toString();
     }
 }
