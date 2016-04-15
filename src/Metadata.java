@@ -10,16 +10,48 @@ public class Metadata {
     private static String METADATA_FILENAME = "metadata";
     private static String PRIMARY_SUFFIX = "_primary";
     private static String SECONDARY_SUFFIX = "_secondary";
+    private static int DEFAULT_PERIOD = 100;
+    private static double DEFAULT_FRESHNESS = 0.25;
+    private static double DEFAULT_PRIMARY_THRESHOLD = 0.75;
+    private static double DEFAULT_SECONDARY_THRESHOLD = 0.5;
 
     private Map<String, Table> tables;
     private File metadata;
+    private int period; // number of queries to process before update
+    private double freshness; // proportion of overall usage that the latest measurement counts for
+    private double primaryThreshold; // need to have usage > primaryThreshold*maxUsage to go from secondary to primary
+    private double secondaryThreshold; // need to have usage < secondaryThreshold*maxUsage to go from primary to secondary
 
     public Metadata(String dataPath) throws IOException {
+
+        period = DEFAULT_PERIOD;
+        freshness = DEFAULT_FRESHNESS;
+        primaryThreshold = DEFAULT_PRIMARY_THRESHOLD;
+        secondaryThreshold = DEFAULT_SECONDARY_THRESHOLD;
+        init(dataPath);
+    }
+    
+    public Metadata(String dataPath, int period, double freshness, double primaryThreshold, double secondaryThreshold) throws IOException {
+        
+        this.period = period;
+        this.freshness = freshness;
+        this.primaryThreshold = primaryThreshold;
+        this.secondaryThreshold = secondaryThreshold;
+        init(dataPath);
+    }
+    
+    public void init(String dataPath) throws IOException {
 
         tables = new HashMap<>();
         metadata = Paths.get(dataPath, METADATA_FILENAME).toFile();
         if (!metadata.exists()) {
             metadata.createNewFile();
+            try (Writer out = new FileWriter(metadata, true)) {
+                out.write(String.format("%d\n", period));
+                out.write(String.format("%f\n", freshness));
+                out.write(String.format("%f\n", primaryThreshold));
+                out.write(String.format("%f\n", secondaryThreshold));
+            }
         }
         readData();
     }
@@ -31,44 +63,73 @@ public class Metadata {
 
     public void createTable(String name, List<String> columns) throws IOException {
 
+        createTable(name, columns, period, freshness, primaryThreshold, secondaryThreshold);
+    }
+    
+    public void createTable(String name, List<String> columns, int tablePeriod, double tableFreshness,
+                            double tablePrimaryThreshold, double tableSecondaryThreshold) throws IOException {
+
         Map<String, Usage> colUsage = new HashMap<>();
         for (String col : columns) {
             colUsage.put(col, new Usage(0));
         }
-        TableUsage tableUsage = new TableUsage(100, 0.25, 0.6, 0.3, columns, new ArrayList<String>(), colUsage); // move these values into a config
+        TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
+                tablePrimaryThreshold, tableSecondaryThreshold, columns, new ArrayList<String>(), colUsage);
         Table table = new Table(name, name+PRIMARY_SUFFIX, name+SECONDARY_SUFFIX, tableUsage);
         tables.put(name, table);
-        Writer out = new FileWriter(metadata, true);
-        out.write(table.toString());
-        out.close();
+        try (Writer out = new FileWriter(metadata, true)) {
+            out.write(table.toString());
+        }
     }
 
     private void readData() throws IOException {
         
         try (BufferedReader in = new BufferedReader(new FileReader(metadata))) {
             String line;
+            // read in default parameters
+            line = in.readLine();
+            if (line == null) {
+                throw new IllegalArgumentException("Metadata not formatted properly");
+            }
+            period = Integer.parseInt(line);
+            line = in.readLine();
+            if (line == null) {
+                throw new IllegalArgumentException("Metadata not formatted properly");
+            }
+            freshness = Double.parseDouble(line);
+            line = in.readLine();
+            if (line == null) {
+                throw new IllegalArgumentException("Metadata not formatted properly");
+            }
+            primaryThreshold = Double.parseDouble(line);
+            line = in.readLine();
+            if (line == null) {
+                throw new IllegalArgumentException("Metadata not formatted properly");
+            }
+            secondaryThreshold = Double.parseDouble(line);
+
             while ((line = in.readLine()) != null) {
                 String name = line;
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                int period = Integer.parseInt(line);
+                int tablePeriod = Integer.parseInt(line);
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                double freshness = Double.parseDouble(line);
+                double tableFreshness = Double.parseDouble(line);
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                double primaryThreshold = Double.parseDouble(line);
+                double tablePrimaryThreshold = Double.parseDouble(line);
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                double secondaryThreshold = Double.parseDouble(line);
+                double tableSecondaryThreshold = Double.parseDouble(line);
 
                 Map<String, Usage> colUsage = new HashMap<>();
                 line = in.readLine();
@@ -105,7 +166,8 @@ public class Metadata {
                     colUsage.put(secondary.get(i), new Usage(Double.parseDouble(secondaryUsage.get(i))));
                 }
 
-                TableUsage tableUsage = new TableUsage(period, freshness, primaryThreshold, secondaryThreshold, primary, secondary, colUsage);
+                TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
+                        tablePrimaryThreshold, tableSecondaryThreshold, primary, secondary, colUsage);
                 Table table = new Table(name, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, tableUsage);
                 tables.put(name, table);
             }
