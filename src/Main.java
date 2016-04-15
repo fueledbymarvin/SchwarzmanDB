@@ -9,6 +9,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
+//        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
         Metadata metadata = new Metadata("/home/marvin/Downloads/");
 //        List<String> columns = new ArrayList<>();
 //        columns.add("first_name");
