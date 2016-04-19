@@ -9,15 +9,21 @@ import java.util.List;
  */
 public class Record {
 
-    int id;
-    Map<String, String> values;
-    Table table;
+    private enum Type {
+        READ,
+        WRITE
+    }
+    private Type type;
+    private int id;
+    private Map<String, String> values;
+    private Table table;
 
-    public Record(Table table, int id, Map<String, String> values) {
+    public Record(Table table, int id, Map<String, String> values, Type type) {
 
+        this.table = table;
         this.id = id;
         this.values = values;
-        this.table = table;
+        this.type = type;
     }
 
     public int getId() {
