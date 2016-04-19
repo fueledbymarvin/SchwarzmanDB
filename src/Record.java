@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
@@ -9,15 +10,25 @@ import java.util.List;
 public class Record {
 
     int id;
-    String column;
-    String value;
+    Map<String, String> values;
     Table table;
 
-    public Record(int id, String column, String value, Table table) {
+    public Record(Table table, int id, Map<String, String> values) {
 
         this.id = id;
-        this.column = column;
-        this.value = value;
+        this.values = values;
         this.table = table;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public Map<String, String> getValues() {
+        return values;
+    }
+
+    public Table getTable() {
+        return table;
     }
 }
