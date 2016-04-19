@@ -108,39 +108,24 @@ public class TableUsage {
         sb.append("\n");
         sb.append(secondaryThreshold);
         sb.append("\n");
-        sb.append(join(primary, ","));
+        sb.append(CSV.join(primary, ","));
         sb.append("\n");
         List<String> primaryUsage = new ArrayList<>();
         for (String col : primary) {
             String usage = String.format("%f", colUsage.get(col).getUsage());
             primaryUsage.add(usage);
         }
-        sb.append(join(primaryUsage, ","));
+        sb.append(CSV.join(primaryUsage, ","));
         sb.append("\n");
-        sb.append(join(secondary, ","));
+        sb.append(CSV.join(secondary, ","));
         sb.append("\n");
         List<String> secondaryUsage = new ArrayList<>();
         for (String col : secondary) {
             String usage = String.format("%f", colUsage.get(col).getUsage());
             secondaryUsage.add(usage);
         }
-        sb.append(join(secondaryUsage, ","));
+        sb.append(CSV.join(secondaryUsage, ","));
         sb.append("\n");
-        return sb.toString();
-    }
-
-    private String join(List<String> strs, String delim) {
-
-        StringBuilder sb = new StringBuilder();
-        if (!strs.isEmpty()) {
-            for (String str : strs) {
-                sb.append(str);
-                sb.append(delim);
-            }
-            for (int i = 0; i < delim.length(); i++) {
-                sb.deleteCharAt(sb.length() - 1 - i);
-            }
-        }
         return sb.toString();
     }
 }

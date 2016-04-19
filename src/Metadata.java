@@ -136,12 +136,12 @@ public class Metadata {
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                List<String> primary = readColumns(line);
+                List<String> primary = CSV.split(line, ",");
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                List<String> primaryUsage = readColumns(line);
+                List<String> primaryUsage = CSV.split(line, ",");
                 if (primary.size() != primaryUsage.size()) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
@@ -153,12 +153,12 @@ public class Metadata {
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                List<String> secondary = readColumns(line);
+                List<String> secondary = CSV.split(line, ",");
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
-                List<String> secondaryUsage = readColumns(line);
+                List<String> secondaryUsage = CSV.split(line, ",");
                 if (secondary.size() != secondaryUsage.size()) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
                 }
@@ -172,23 +172,5 @@ public class Metadata {
                 tables.put(name, table);
             }
         }
-    }
-
-    private List<String> readColumns(String line) {
-
-        List<String> columns = new ArrayList<>();
-        if (!line.isEmpty()) {
-            int commaIndex;
-            while ((commaIndex = line.indexOf(',')) != -1) {
-                columns.add(line.substring(0, commaIndex));
-                if (commaIndex + 1 == line.length()) {
-                    // trailing comma for some reason
-                    return columns;
-                }
-                line = line.substring(commaIndex + 1);
-            }
-            columns.add(line);
-        }
-        return columns;
     }
 }
