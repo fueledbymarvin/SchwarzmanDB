@@ -9,13 +9,15 @@ import java.util.List;
 public class Record {
 
     int id;
-    String values;
+    String column;
+    String value;
     Table table;
 
-    public Record(int id, String values, Table table) {
+    public Record(int id, String column, String value, Table table) {
 
         this.id = id;
-        this.values = values;
+        this.column = column;
+        this.value = value;
         this.table = table;
     }
 }
