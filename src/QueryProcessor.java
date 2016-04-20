@@ -72,7 +72,7 @@ public class QueryProcessor {
         return record;
     }
 
-    public void write(Record record) throws IOException {
+    public static void write(Record record) throws IOException {
 
         Table table = record.getTable();
         Map<String, String> vals = record.getValues();
@@ -82,7 +82,7 @@ public class QueryProcessor {
         writeRow(id, table.getSecondaryColumns(), vals, table.getSecondary());
     }
 
-    public void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
+    private static void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
 
         List<String> relevantVals = new ArrayList<>(cols.size());
         relevantVals.add(String.valueOf(id));

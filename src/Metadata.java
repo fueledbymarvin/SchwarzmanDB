@@ -15,6 +15,7 @@ public class Metadata {
     private static double DEFAULT_PRIMARY_THRESHOLD = 0.75;
     private static double DEFAULT_SECONDARY_THRESHOLD = 0.5;
 
+    private String dataPath;
     private Map<String, Table> tables;
     private File metadata;
     private int period; // number of queries to process before update
@@ -24,23 +25,25 @@ public class Metadata {
 
     public Metadata(String dataPath) throws IOException {
 
+        this.dataPath = dataPath;
         period = DEFAULT_PERIOD;
         freshness = DEFAULT_FRESHNESS;
         primaryThreshold = DEFAULT_PRIMARY_THRESHOLD;
         secondaryThreshold = DEFAULT_SECONDARY_THRESHOLD;
-        init(dataPath);
+        init();
     }
     
     public Metadata(String dataPath, int period, double freshness, double primaryThreshold, double secondaryThreshold) throws IOException {
-        
+
+        this.dataPath = dataPath;
         this.period = period;
         this.freshness = freshness;
         this.primaryThreshold = primaryThreshold;
         this.secondaryThreshold = secondaryThreshold;
-        init(dataPath);
+        init();
     }
     
-    public void init(String dataPath) throws IOException {
+    public void init() throws IOException {
 
         tables = new HashMap<>();
         metadata = Paths.get(dataPath, METADATA_FILENAME).toFile();
@@ -75,7 +78,7 @@ public class Metadata {
         }
         TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
                 tablePrimaryThreshold, tableSecondaryThreshold, columns, new ArrayList<String>(), colUsage);
-        Table table = new Table(name, 1, name+PRIMARY_SUFFIX, name+SECONDARY_SUFFIX, tableUsage);
+        Table table = new Table(name, 1, Paths.get(dataPath, name+PRIMARY_SUFFIX).toFile(), Paths.get(dataPath, name+SECONDARY_SUFFIX).toFile(), tableUsage);
         tables.put(name, table);
         try (Writer out = new FileWriter(metadata, true)) {
             out.write(table.toString());
@@ -173,7 +176,7 @@ public class Metadata {
 
                 TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
                         tablePrimaryThreshold, tableSecondaryThreshold, primary, secondary, colUsage);
-                Table table = new Table(name, nextId, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, tableUsage);
+                Table table = new Table(name, nextId, Paths.get(dataPath, name+PRIMARY_SUFFIX).toFile(), Paths.get(dataPath, name+SECONDARY_SUFFIX).toFile(), tableUsage);
                 tables.put(name, table);
             }
         }

@@ -11,12 +11,12 @@ public class Table {
     private TableUsage tableUsage;
     private int nextId;
 
-    public Table(String name, int nextId, String primary, String secondary, TableUsage tableUsage) {
+    public Table(String name, int nextId, File primary, File secondary, TableUsage tableUsage) {
 
         this.name = name;
         this.nextId = nextId;
-        this.primary = new File(primary);
-        this.secondary = new File(secondary);
+        this.primary = primary;
+        this.secondary = secondary;
         this.tableUsage = tableUsage;
     }
 
