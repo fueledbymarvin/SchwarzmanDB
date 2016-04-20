@@ -1,9 +1,4 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -20,39 +15,44 @@ public class QueryProcessor {
 
     public List<Record> scan(Table table, List<String> columns) throws IOException {
 
-        List<Record> records = new ArrayList<>();
-        List<String> primaryColsToFetch = new ArrayList<>();
-        List<String> secondaryColsToFetch = new ArrayList<>();
+        table.readLock().lock();
+        try {
+            List<Record> records = new ArrayList<>();
+            List<String> primaryColsToFetch = new ArrayList<>();
+            List<String> secondaryColsToFetch = new ArrayList<>();
 
-        for (String column : columns) {
-            if (table.isPrimary(column)) {
-                primaryColsToFetch.add(column);
-            } else if (table.isSecondary(column)) {
-                secondaryColsToFetch.add(column);
+            for (String column : columns) {
+                if (table.isPrimary(column)) {
+                    primaryColsToFetch.add(column);
+                } else if (table.isSecondary(column)) {
+                    secondaryColsToFetch.add(column);
+                }
             }
+
+            Map<Integer, Map<String, String>> values = new HashMap<>();
+
+            if (primaryColsToFetch.size() > 0) {
+                values = scanFile(Boolean.TRUE, table, primaryColsToFetch, values);
+            }
+
+            if (secondaryColsToFetch.size() > 0) {
+                values = scanFile(Boolean.FALSE, table, secondaryColsToFetch, values);
+            }
+
+            // Convert saved values into records
+            for (Map.Entry<Integer, Map<String, String>> entry : values.entrySet()) {
+                records.add(new Record(table, entry.getKey(), entry.getValue()));
+            }
+
+            // Update table usage
+            if (table.used(columns)) {
+                updateTable(table);
+            }
+
+            return records;
+        } finally {
+            table.readLock().unlock();
         }
-
-        Map<Integer, Map<String, String>> values = new HashMap<>();
-
-        if (primaryColsToFetch.size() > 0) {
-            values = scanFile(Boolean.TRUE, table, primaryColsToFetch, values);
-        }
-
-        if (secondaryColsToFetch.size() > 0) {
-            values = scanFile(Boolean.FALSE, table, secondaryColsToFetch, values);
-        }
-
-        // Convert saved values into records
-        for (Map.Entry<Integer, Map<String, String>> entry : values.entrySet()) {
-            records.add(new Record(table, entry.getKey(), entry.getValue()));
-        }
-
-        // Update table usage
-        if (table.used(columns)) {
-            updateTable(table);
-        }
-
-        return records;
     }
 
     public static Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
@@ -92,31 +92,47 @@ public class QueryProcessor {
 
     public Record read(Table table, int id, List<String> columns) {
 
-        Map<String, String> values = new HashMap<>();
-        Record record = new Record(table, id, values);
-        return record;
+        table.readLock().lock();
+        try {
+            Map<String, String> values = new HashMap<>();
+            Record record = new Record(table, id, values);
+            return record;
+        } finally {
+            table.readLock().unlock();
+        }
     }
 
-    public void write(Record record) throws IOException {
+    public boolean write(Record record) throws IOException {
 
         Table table = record.getTable();
-        Map<String, String> vals = record.getValues();
-        int id = table.getNextId();
-        table.incrementNextId();
-        writeRow(id, table.getPrimaryColumns(), vals, table.getPrimary());
-        writeRow(id, table.getSecondaryColumns(), vals, table.getSecondary());
+        if (!table.writeLock().tryLock()) {
+            return false;
+        }
+        try {
+            Map<String, String> vals = record.getValues();
+            int id = table.getNextId();
+            table.incrementNextId();
+            try (
+                    Writer pOut = new BufferedWriter(new FileWriter(table.getPrimary(), true));
+                    Writer sOut = new BufferedWriter(new FileWriter(table.getSecondary(), true))
+            ) {
+                pOut.write(createRow(id, table.getPrimaryColumns(), vals)+"\n");
+                sOut.write(createRow(id, table.getSecondaryColumns(), vals)+"\n");
+            }
+            return true;
+        } finally {
+            table.writeLock().unlock();
+        }
     }
 
-    private void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
+    public String createRow(int id, List<String> cols, Map<String, String> vals) {
 
         List<String> relevantVals = new ArrayList<>(cols.size());
         relevantVals.add(String.valueOf(id));
         for (String col : cols) {
             relevantVals.add(vals.get(col));
         }
-        try (Writer out = new FileWriter(file, true)) {
-            out.write(CSV.join(relevantVals, ",")+"\n");
-        }
+        return CSV.join(relevantVals, ",");
     }
 
     private void updateTable(Table table) {

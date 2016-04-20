@@ -12,7 +12,7 @@ public class Main {
 //        Metadata metadata = new Metadata("/home/marvin/Downloads/");
         Queue<Table> updateQueue = new LinkedList<>();
         QueryProcessor qp = new QueryProcessor(updateQueue);
-        ColumnUpdater updater = new ColumnUpdater(updateQueue);
+        ColumnUpdater updater = new ColumnUpdater(updateQueue, qp);
         updater.start();
 
         List<String> columns = new ArrayList<>();

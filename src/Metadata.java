@@ -80,7 +80,7 @@ public class Metadata {
                 tablePrimaryThreshold, tableSecondaryThreshold, columns, new ArrayList<String>(), colUsage);
         Table table = new Table(name, 1, Paths.get(dataPath, name+PRIMARY_SUFFIX).toFile(), Paths.get(dataPath, name+SECONDARY_SUFFIX).toFile(), tableUsage);
         tables.put(name, table);
-        try (Writer out = new FileWriter(metadata, true)) {
+        try (Writer out = new BufferedWriter(new FileWriter(metadata, true))) {
             out.write(table.toString());
         }
     }

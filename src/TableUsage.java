@@ -94,6 +94,20 @@ public class TableUsage {
         return secondary;
     }
 
+    public List<String> getNewPrimary() {
+        return newPrimary;
+    }
+
+    public List<String> getNewSecondary() {
+        return newSecondary;
+    }
+
+    public void switchToNew() {
+
+        primary = newPrimary;
+        secondary = newSecondary;
+    }
+
     public String toString() {
 
         StringBuilder sb = new StringBuilder();

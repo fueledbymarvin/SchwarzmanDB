@@ -1,5 +1,7 @@
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * Created by marvin on 4/7/16.
@@ -10,6 +12,7 @@ public class Table {
     private File primary, secondary;
     private TableUsage tableUsage;
     private int nextId;
+    private ReadWriteLock rwLock;
 
     public Table(String name, int nextId, File primary, File secondary, TableUsage tableUsage) {
 
@@ -48,12 +51,34 @@ public class Table {
         return tableUsage.getSecondary();
     }
 
+    public List<String> getNewPrimaryColumns() {
+
+        return tableUsage.getNewPrimary();
+    }
+
+    public List<String> getNewSecondaryColumns() {
+
+        return tableUsage.getNewSecondary();
+    }
+
+    public void switchToNew() {
+        tableUsage.switchToNew();
+    }
+
     public int getNextId() {
         return nextId;
     }
 
     public void incrementNextId() {
         nextId++;
+    }
+
+    public Lock readLock() {
+        return rwLock.readLock();
+    }
+
+    public Lock writeLock() {
+        return rwLock.writeLock();
     }
 
     public boolean used(List<String> columns) {
