@@ -15,7 +15,7 @@ import java.util.jar.Pack200;
  */
 public class QueryProcessor {
 
-    public List<Record> scan(Table table, List<String> columns) throws IOException {
+    public static List<Record> scan(Table table, List<String> columns) throws IOException {
 
         List<Record> records = new ArrayList<>();
         List<String> primaryColsToFetch = new ArrayList<>();
@@ -47,7 +47,7 @@ public class QueryProcessor {
         return records;
     }
 
-    public Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
+    public static Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
 
         // Open appropriate file and save its column names
         File file;
@@ -70,7 +70,7 @@ public class QueryProcessor {
                     int id = Integer.parseInt(splitLine.get(0));
                     String newValue = splitLine.get(tableColumns.indexOf(column) + 1);
 
-                    if ((columnValuePairs = values.get(column)) == null) {
+                    if ((columnValuePairs = values.get(id)) == null) {
                         columnValuePairs = new HashMap<>();
                     }
                     columnValuePairs.put(column, newValue);
