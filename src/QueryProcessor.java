@@ -55,7 +55,7 @@ public class QueryProcessor {
         return records;
     }
 
-    public static Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
+    private Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
 
         // Open appropriate file and save its column names
         File file;
@@ -90,11 +90,66 @@ public class QueryProcessor {
         return values;
     }
 
-    public Record read(Table table, int id, List<String> columns) {
+    public Record read(Table table, int id, List<String> columns) throws IOException {
+
+        List<String> primaryColsToFetch = new ArrayList<>();
+        List<String> secondaryColsToFetch = new ArrayList<>();
+
+        for (String column : columns) {
+            if (table.isPrimary(column)) {
+                primaryColsToFetch.add(column);
+            } else if (table.isSecondary(column)) {
+                secondaryColsToFetch.add(column);
+            }
+        }
 
         Map<String, String> values = new HashMap<>();
-        Record record = new Record(table, id, values);
-        return record;
+
+        if (primaryColsToFetch.size() > 0) {
+            values = searchFileForRecord(Boolean.TRUE, table, id, primaryColsToFetch, values);
+        }
+
+        if (secondaryColsToFetch.size() > 0) {
+            values = searchFileForRecord(Boolean.FALSE, table, id, secondaryColsToFetch, values);
+        }
+
+        // Update table usage
+        if (table.used(columns)) {
+            updateTable(table);
+        }
+
+        return new Record(table, id, values);
+    }
+
+    private Map<String, String> searchFileForRecord(Boolean isPrimary, Table table, int id, List<String> columns, Map<String, String> values) throws IOException {
+
+        // Open appropriate file and save its column names
+        File file;
+        List<String> tableColumns;
+        if (isPrimary) {
+            file = table.getPrimary();
+            tableColumns = table.getPrimaryColumns();
+        } else {
+            file = table.getSecondary();
+            tableColumns = table.getSecondaryColumns();
+        }
+
+        // Iterate through file and save columns in the values map
+        List<String> splitLine;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                splitLine = CSV.split(line, ",");
+                for (String column : columns) {
+                    int currentId = Integer.parseInt(splitLine.get(0));
+                    if (currentId == id) {
+                        String newValue = splitLine.get(tableColumns.indexOf(column) + 1);
+                        values.put(column, newValue);
+                    }
+                }
+            }
+        }
+
+        return values;
     }
 
     public void write(Record record) throws IOException {
