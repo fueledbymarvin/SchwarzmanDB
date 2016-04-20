@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Record {
 
-    private enum Type {
+    public enum Type {
         READ,
         WRITE
     }
@@ -18,12 +18,19 @@ public class Record {
     private Map<String, String> values;
     private Table table;
 
-    public Record(Table table, int id, Map<String, String> values, Type type) {
+    public Record(Table table, int id, Map<String, String> values) {
 
         this.table = table;
         this.id = id;
         this.values = values;
-        this.type = type;
+        type = Type.READ;
+    }
+
+    public Record(Table table, Map<String, String> values) {
+
+        this.table = table;
+        this.values = values;
+        type = Type.WRITE;
     }
 
     public int getId() {

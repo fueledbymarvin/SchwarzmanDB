@@ -29,7 +29,9 @@ public class CSV {
         StringBuilder sb = new StringBuilder();
         if (!strs.isEmpty()) {
             for (String str : strs) {
-                sb.append(str);
+                if (str != null) {
+                    sb.append(str);
+                }
                 sb.append(delim);
             }
             for (int i = 0; i < delim.length(); i++) {

@@ -75,7 +75,7 @@ public class Metadata {
         }
         TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
                 tablePrimaryThreshold, tableSecondaryThreshold, columns, new ArrayList<String>(), colUsage);
-        Table table = new Table(name, name+PRIMARY_SUFFIX, name+SECONDARY_SUFFIX, tableUsage);
+        Table table = new Table(name, 1, name+PRIMARY_SUFFIX, name+SECONDARY_SUFFIX, tableUsage);
         tables.put(name, table);
         try (Writer out = new FileWriter(metadata, true)) {
             out.write(table.toString());
@@ -110,6 +110,11 @@ public class Metadata {
 
             while ((line = in.readLine()) != null) {
                 String name = line;
+                line = in.readLine();
+                if (line == null) {
+                    throw new IllegalArgumentException("Metadata not formatted properly");
+                }
+                int nextId = Integer.parseInt(line);
                 line = in.readLine();
                 if (line == null) {
                     throw new IllegalArgumentException("Metadata not formatted properly");
@@ -168,7 +173,7 @@ public class Metadata {
 
                 TableUsage tableUsage = new TableUsage(tablePeriod, tableFreshness,
                         tablePrimaryThreshold, tableSecondaryThreshold, primary, secondary, colUsage);
-                Table table = new Table(name, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, tableUsage);
+                Table table = new Table(name, nextId, name + PRIMARY_SUFFIX, name + SECONDARY_SUFFIX, tableUsage);
                 tables.put(name, table);
             }
         }
