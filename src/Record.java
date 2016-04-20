@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Record {
 
-    private enum Type {
+    public enum Type {
         READ,
         WRITE
     }
