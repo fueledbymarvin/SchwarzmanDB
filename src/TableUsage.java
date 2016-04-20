@@ -14,7 +14,7 @@ public class TableUsage {
     private double maxUsage; // maximum usage of all columns
     private double primaryThreshold; // need to have usage > primaryThreshold*maxUsage to go from secondary to primary
     private double secondaryThreshold; // need to have usage < secondaryThreshold*maxUsage to go from primary to secondary
-    private List<String> primary, secondary;
+    private List<String> primary, secondary, newPrimary, newSecondary;
     private Map<String, Usage> colUsage;
     private Map<String, Boolean> colPrimary; // true if primary
 
@@ -63,8 +63,8 @@ public class TableUsage {
             }
 
             boolean changed = false;
-            List<String> newPrimary = new ArrayList<>();
-            List<String> newSecondary = new ArrayList<>();
+            newPrimary = new ArrayList<>();
+            newSecondary = new ArrayList<>();
             for (String col : primary) {
                 if (colUsage.get(col).getUsage() < secondaryThreshold*maxUsage) {
                     changed = true;
@@ -81,9 +81,6 @@ public class TableUsage {
                     newSecondary.add(col);
                 }
             }
-            primary = newPrimary;
-            secondary = newSecondary;
-            // TODO: Actually change the files
             return changed;
         }
         return false;
