@@ -47,6 +47,11 @@ public class QueryProcessor {
             records.add(new Record(table, entry.getKey(), entry.getValue()));
         }
 
+        // Update table usage
+        if (table.used(columns)) {
+            updateTable(table);
+        }
+
         return records;
     }
 
