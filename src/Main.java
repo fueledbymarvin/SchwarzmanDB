@@ -30,9 +30,15 @@ public class Main {
         data.put("first_name", "Justin");
         data.put("last_name", "Zhang");
         qp.write(new Record(table, data));
+
+        System.out.println("Scan");
         List<Record> records = qp.scan(table, columns);
         for (Record record : records) {
             System.out.println(record.getId() + ": " + record.getValues());
         }
+
+        System.out.println("\nSingle read");
+        Record record = qp.read(table, 3, columns);
+        System.out.println(record.getId() + ": " + record.getValues());
     }
 }
