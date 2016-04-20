@@ -89,18 +89,20 @@ public class QueryProcessor {
         return record;
     }
 
-
-    public void write(Record record) throws IOException {
+    public static void write(Record record) throws IOException {
 
         Table table = record.getTable();
         Map<String, String> vals = record.getValues();
-        writeRow(table.getPrimaryColumns(), vals, table.getPrimary());
-        writeRow(table.getSecondaryColumns(), vals, table.getSecondary());
+        int id = table.getNextId();
+        table.incrementNextId();
+        writeRow(id, table.getPrimaryColumns(), vals, table.getPrimary());
+        writeRow(id, table.getSecondaryColumns(), vals, table.getSecondary());
     }
 
-    public void writeRow(List<String> cols, Map<String, String> vals, File file) throws IOException {
+    private static void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
 
         List<String> relevantVals = new ArrayList<>(cols.size());
+        relevantVals.add(String.valueOf(id));
         for (String col : cols) {
             relevantVals.add(vals.get(col));
         }

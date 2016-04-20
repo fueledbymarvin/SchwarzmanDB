@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by marvin on 4/7/16.
@@ -11,11 +13,14 @@ public class Main {
 
 //        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
         Metadata metadata = new Metadata("/home/marvin/Downloads/");
-//        List<String> columns = new ArrayList<>();
-//        columns.add("first_name");
-//        columns.add("last_name");
-//        metadata.createTable("people", columns);
+        List<String> columns = new ArrayList<>();
+        columns.add("first_name");
+        columns.add("last_name");
+        metadata.createTable("people", columns);
         Table table = metadata.get("people");
-        System.out.println(table.isPrimary("first_name"));
+        Map<String, String> data = new HashMap<>();
+        data.put("first_name", "Marvin");
+        data.put("last_name", "Qian");
+        QueryProcessor.write(new Record(table, data));
     }
 }
