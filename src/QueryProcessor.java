@@ -1,12 +1,13 @@
 import java.io.File;
 import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.File;
 import java.util.jar.Pack200;
 
 /**
@@ -14,7 +15,7 @@ import java.util.jar.Pack200;
  */
 public class QueryProcessor {
 
-    public List<Record> scan(Table table, List<String> columns) {
+    public List<Record> scan(Table table, List<String> columns) throws IOException {
 
         List<Record> records = new ArrayList<>();
         List<String> primaryColsToFetch = new ArrayList<>();
@@ -38,28 +39,44 @@ public class QueryProcessor {
             values = scanFile(Boolean.FALSE, table, secondaryColsToFetch, values);
         }
 
-        // TODO: create records
+        // Convert saved values into records
+        for (Map.Entry<Integer, Map<String, String>> entry : values.entrySet()) {
+            records.add(new Record(table, entry.getKey(), entry.getValue()));
+        }
 
         return records;
     }
 
-    public Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) {
+    public Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
 
+        // Open appropriate file and save its column names
         File file;
+        List<String> tableColumns;
         if (isPrimary) {
             file = table.getPrimary();
+            tableColumns = table.getPrimaryColumns();
         } else {
             file = table.getSecondary();
+            tableColumns = table.getSecondaryColumns();
         }
 
-        // TODO: go through line by line and save columns in value
-        for (String column : columns) {
-            Map<String, String> columnValuePairs;
-            if ((columnValuePairs = values.get(column)) == null) {
-                columnValuePairs = new HashMap<>();
+        // Iterate through file and save columns in the values map
+        List<String> splitLine;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                splitLine = CSV.split(line, ",");
+                for (String column : columns) {
+                    Map<String, String> columnValuePairs;
+                    int id = Integer.parseInt(splitLine.get(0));
+                    String newValue = splitLine.get(tableColumns.indexOf(column) + 1);
+
+                    if ((columnValuePairs = values.get(column)) == null) {
+                        columnValuePairs = new HashMap<>();
+                    }
+                    columnValuePairs.put(column, newValue);
+                    values.put(id, columnValuePairs);
+                }
             }
-//            columnValuePairs.put(column, );
-//            values.put(id, columnValuePairs);
         }
 
         return values;
