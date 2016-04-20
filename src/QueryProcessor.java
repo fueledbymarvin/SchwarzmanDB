@@ -4,18 +4,21 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.jar.Pack200;
+import java.util.*;
 
 /**
  * Created by frankjwu on 4/19/16.
  */
 public class QueryProcessor {
 
-    public static List<Record> scan(Table table, List<String> columns) throws IOException {
+    private Queue<Table> updateQueue;
+
+    public QueryProcessor(Queue<Table> updateQueue) {
+
+        this.updateQueue = updateQueue;
+    }
+
+    public List<Record> scan(Table table, List<String> columns) throws IOException {
 
         List<Record> records = new ArrayList<>();
         List<String> primaryColsToFetch = new ArrayList<>();
@@ -89,7 +92,7 @@ public class QueryProcessor {
         return record;
     }
 
-    public static void write(Record record) throws IOException {
+    public void write(Record record) throws IOException {
 
         Table table = record.getTable();
         Map<String, String> vals = record.getValues();
@@ -99,7 +102,7 @@ public class QueryProcessor {
         writeRow(id, table.getSecondaryColumns(), vals, table.getSecondary());
     }
 
-    private static void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
+    private void writeRow(int id, List<String> cols, Map<String, String> vals, File file) throws IOException {
 
         List<String> relevantVals = new ArrayList<>(cols.size());
         relevantVals.add(String.valueOf(id));
@@ -107,7 +110,15 @@ public class QueryProcessor {
             relevantVals.add(vals.get(col));
         }
         try (Writer out = new FileWriter(file, true)) {
-            out.write(CSV.join(relevantVals, ","));
+            out.write(CSV.join(relevantVals, ",")+"\n");
+        }
+    }
+
+    private void updateTable(Table table) {
+
+        synchronized (updateQueue) {
+            updateQueue.add(table);
+            updateQueue.notifyAll();
         }
     }
 }

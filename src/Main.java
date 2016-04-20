@@ -1,8 +1,5 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by marvin on 4/7/16.
@@ -13,6 +10,11 @@ public class Main {
 
         Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
 //        Metadata metadata = new Metadata("/home/marvin/Downloads/");
+        Queue<Table> updateQueue = new LinkedList<>();
+        QueryProcessor qp = new QueryProcessor(updateQueue);
+        ColumnUpdater updater = new ColumnUpdater(updateQueue);
+        updater.start();
+
         List<String> columns = new ArrayList<>();
         columns.add("first_name");
         columns.add("last_name");
@@ -21,14 +23,14 @@ public class Main {
         Map<String, String> data = new HashMap<>();
         data.put("first_name", "Marvin");
         data.put("last_name", "Qian");
-        QueryProcessor.write(new Record(table, data));
+        qp.write(new Record(table, data));
         data.put("first_name", "Frank");
         data.put("last_name", "Wu");
-        QueryProcessor.write(new Record(table, data));
+        qp.write(new Record(table, data));
         data.put("first_name", "Justin");
         data.put("last_name", "Zhang");
-        QueryProcessor.write(new Record(table, data));
-        List<Record> records = QueryProcessor.scan(table, columns);
+        qp.write(new Record(table, data));
+        List<Record> records = qp.scan(table, columns);
         for (Record record : records) {
             System.out.println(record.getId() + ": " + record.getValues());
         }
