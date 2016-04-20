@@ -37,4 +37,8 @@ public class Record {
     public Table getTable() {
         return table;
     }
+
+    public Type getType() {
+        return type;
+    }
 }
