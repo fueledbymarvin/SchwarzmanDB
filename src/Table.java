@@ -2,6 +2,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by marvin on 4/7/16.
@@ -21,6 +22,7 @@ public class Table {
         this.primary = primary;
         this.secondary = secondary;
         this.tableUsage = tableUsage;
+        this.rwLock = new ReentrantReadWriteLock();
     }
 
     public boolean isPrimary(String col) {
