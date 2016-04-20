@@ -48,6 +48,14 @@ public class Table {
         return tableUsage.getSecondary();
     }
 
+    public int getNextId() {
+        return nextId;
+    }
+
+    public void incrementNextId() {
+        nextId++;
+    }
+
     public boolean used(List<String> columns) {
 
         // Should do something if this returns true
