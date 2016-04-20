@@ -40,29 +40,34 @@ public class TransactionTests {
 		// Transaction One: Speed of accessing one column repeatedly
         int idToSearch;
         List<String> colsToSearch = new ArrayList<>();
-        Random randomId = new Random(numRecords);
-        Random randomCol = new Random(numCols);
+        Random random = new Random();
 
         System.out.println("Performing Test 1...");
-        startTime = System.nanoTime();
+        estimatedTime = 0;
         colsToSearch.add("Column 1");
-        for (int i = 0; i < 10000; i++) {
-            idToSearch = 1;
+        for (int i = 0; i < 50; i++) {
+            idToSearch = random.nextInt(numRecords) + 1;
+//            System.out.println(idToSearch);
+            startTime = System.nanoTime();
             qp.read(table, idToSearch, colsToSearch);
+            estimatedTime += System.nanoTime() - startTime;
+//            System.out.println(i);
         }
-        estimatedTime = System.nanoTime() - startTime;
         System.out.println("The Total Elapsed Time was: " + estimatedTime + "\n");
 		
 		// Transaction Two: Speed of random accessing of columns
         System.out.println("Performing Test 2...");
-        startTime = System.nanoTime();
-        for (int i = 0; i < 10000; i++) {
+        estimatedTime = 0;
+        for (int i = 0; i < 50; i++) {
             colsToSearch = new ArrayList<>();
-            colsToSearch.add("Column " + randomCol.nextInt() + 1);
-            idToSearch = randomId.nextInt() + 1;
+            colsToSearch.add("Column " + random.nextInt(numCols));
+            idToSearch = random.nextInt(numRecords) + 1;
+//            System.out.println(idToSearch);
+            startTime = System.nanoTime();
             qp.read(table, idToSearch, colsToSearch);
+            estimatedTime += System.nanoTime() - startTime;
+//            System.out.println(i);
         }
-        estimatedTime = System.nanoTime() - startTime;
         System.out.println("The Total Elapsed Time was: " + estimatedTime);
 		
 		
