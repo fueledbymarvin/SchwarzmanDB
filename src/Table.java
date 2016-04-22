@@ -14,6 +14,7 @@ public class Table {
     private TableUsage tableUsage;
     private int nextId;
     private ReadWriteLock rwLock;
+    private boolean writeable;
 
     public Table(String name, int nextId, File primary, File secondary, TableUsage tableUsage) {
 
@@ -23,6 +24,7 @@ public class Table {
         this.secondary = secondary;
         this.tableUsage = tableUsage;
         this.rwLock = new ReentrantReadWriteLock();
+        writeable = true;
     }
 
     public boolean isPrimary(String col) {
@@ -81,6 +83,16 @@ public class Table {
 
     public Lock writeLock() {
         return rwLock.writeLock();
+    }
+
+    public boolean isWriteable() {
+
+        return writeable;
+    }
+
+    public void setWriteable(boolean writeable) {
+
+        this.writeable = writeable;
     }
 
     public boolean used(List<String> columns) {

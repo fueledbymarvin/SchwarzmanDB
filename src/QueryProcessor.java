@@ -160,6 +160,9 @@ public class QueryProcessor {
     public boolean write(Record record) throws IOException {
 
         Table table = record.getTable();
+        if (!table.isWriteable()) {
+            return false;
+        }
         if (!table.writeLock().tryLock()) {
             return false;
         }

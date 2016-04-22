@@ -16,8 +16,8 @@ public class TransactionTests {
         int numRecords = 10000;
 		int recordLength = 100;
 		// Generate Records
-        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
-//        Metadata metadata = new Metadata("/home/marvin/Downloads/");
+        // Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
+		Metadata metadata = new Metadata("/home/marvin/Downloads/");
 		List<String> columns = new ArrayList<>();
 		for(int i = 0; i < numCols; i++){
         	columns.add("Column " + i);
@@ -45,13 +45,13 @@ public class TransactionTests {
         System.out.println("Performing Test 1...");
         estimatedTime = 0;
         colsToSearch.add("Column 1");
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 105; i++) {
             idToSearch = random.nextInt(numRecords) + 1;
-//            System.out.println(idToSearch);
+			// System.out.println(idToSearch);
             startTime = System.nanoTime();
             qp.read(table, idToSearch, colsToSearch);
             estimatedTime += System.nanoTime() - startTime;
-//            System.out.println(i);
+			// System.out.println(i);
         }
         System.out.println("The Total Elapsed Time was: " + estimatedTime + "\n");
 		

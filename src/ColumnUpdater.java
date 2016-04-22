@@ -35,6 +35,7 @@ public class ColumnUpdater extends Thread {
                 table = updateQueue.remove();
             }
 
+            File newPrimary, newSecondary;
             table.readLock().lock();
             try {
                 // Read all records
@@ -44,8 +45,8 @@ public class ColumnUpdater extends Thread {
                 List<Record> records = queryProcessor.scan(table, cols);
 
                 // Write to temporary file
-                File newPrimary = File.createTempFile(table.getPrimary().getName(), null);
-                File newSecondary = File.createTempFile(table.getSecondary().getName(), null);
+                newPrimary = File.createTempFile(table.getPrimary().getName(), null);
+                newSecondary = File.createTempFile(table.getSecondary().getName(), null);
                 List<String> newPrimaryCols = table.getNewPrimaryColumns();
                 List<String> newSecondaryCols = table.getNewSecondaryColumns();
                 try (
@@ -53,25 +54,30 @@ public class ColumnUpdater extends Thread {
                         Writer sOut = new BufferedWriter(new FileWriter(newSecondary, true))
                 ) {
                     for (Record r : records) {
-                        pOut.write(queryProcessor.createRow(r.getId(), newPrimaryCols, r.getValues())+"\n");
-                        sOut.write(queryProcessor.createRow(r.getId(), newSecondaryCols, r.getValues())+"\n");
+                        pOut.write(queryProcessor.createRow(r.getId(), newPrimaryCols, r.getValues()) + "\n");
+                        sOut.write(queryProcessor.createRow(r.getId(), newSecondaryCols, r.getValues()) + "\n");
                     }
                 }
-
-                // Switch the files and the primary/secondary column values
-                table.writeLock().lock();
-                try {
-                    newPrimary.renameTo(table.getPrimary());
-                    newSecondary.renameTo(table.getSecondary());
-                    table.switchToNew();
-                } finally {
-                    table.writeLock().unlock();
-                }
+                // Need to prevent writes because can't directly upgrade lock
+                table.setWriteable(false);
             } catch (IOException e) {
                 System.err.println("Could not update: " + e.toString());
+                continue;
             } finally {
                 table.readLock().unlock();
             }
+
+            // Switch the files and the primary/secondary column values
+            table.writeLock().lock();
+            try {
+                newPrimary.renameTo(table.getPrimary());
+                newSecondary.renameTo(table.getSecondary());
+                table.switchToNew();
+            } finally {
+                table.setWriteable(true);
+                table.writeLock().unlock();
+            }
+
         }
     }
 }
