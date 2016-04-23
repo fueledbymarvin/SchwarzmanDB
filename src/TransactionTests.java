@@ -37,11 +37,11 @@ public class TransactionTests {
 		// First set of transactions will test effectiveness of freshness algorithm
 		// Does reading the same pairs of columns repeatedly together beat fetching 
 		// random columns. How does the number of columns in primary file affect speed
-		// Transaction One: Speed of accessing one column repeatedly
         int idToSearch;
         List<String> colsToSearch = new ArrayList<>();
         Random random = new Random();
 
+        // Transaction One: Speed of accessing one column repeatedly
         System.out.println("Performing Test 1...");
         estimatedTime = 0;
         colsToSearch.add("Column 1");
@@ -54,10 +54,9 @@ public class TransactionTests {
             ClearCache.clear(args[0]);
 			// System.out.println(i);
         }
-        System.out.println("The Total Elapsed Time was: " + estimatedTime + "\n");
+        System.out.println("Transaction 1 Time was: " + estimatedTime + "\n");
 
 		// Transaction Two: Speed of random accessing of columns
-        System.out.println("Performing Test 2...");
         estimatedTime = 0;
         for (int i = 0; i < 50; i++) {
             colsToSearch = new ArrayList<>();
@@ -70,7 +69,7 @@ public class TransactionTests {
             ClearCache.clear(args[0]);
 //            System.out.println(i);
         }
-        System.out.println("The Total Elapsed Time was: " + estimatedTime);
+        System.out.println("Transaction 2 Time was: " + estimatedTime);
 		
 		
 		//surround statements with this code in order to get the time
