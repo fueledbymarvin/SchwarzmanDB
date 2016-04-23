@@ -58,7 +58,7 @@ public class TransactionTests {
 
 		// Transaction Two: Speed of random accessing of columns
         estimatedTime = 0;
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 105; i++) {
             colsToSearch = new ArrayList<>();
             colsToSearch.add("Column " + random.nextInt(numCols));
             idToSearch = random.nextInt(numRecords) + 1;
@@ -69,11 +69,12 @@ public class TransactionTests {
             ClearCache.clear(args[0]);
 //            System.out.println(i);
         }
+<<<<<<< HEAD
         System.out.println("Transaction 2 Time was: " + estimatedTime);
 		
 		// Testing out testFunction script
 		double[] probabilities = {0.5, 0.5};
-		testFunction(2, 2, numRecords, 1000, probabilities, table, qp);
+		testFunction(2, 2, numRecords, 105, probabilities, table, qp);
 		//surround statements with this code in order to get the time
 //		long startTime = System.nanoTime();
 		
@@ -81,6 +82,47 @@ public class TransactionTests {
 //		System.out.println("The Total Elapsed Time was :" + estimatedTime);
 		
 		//
+=======
+        System.out.println("Transaction 2 Time was: " + estimatedTime + "\n");
+
+        // Second Test
+        // With only one table
+        // Similar, but with more columns
+
+        // Transaction One: Speed of accessing two columns together repeatedly
+        System.out.println("Performing Test 2...");
+        estimatedTime = 0;
+        colsToSearch.add("Column 1");
+        colsToSearch.add("Column 2");
+        for (int i = 0; i < 1000; i++) {
+            idToSearch = random.nextInt(numRecords) + 1;
+            // System.out.println(idToSearch);
+            startTime = System.nanoTime();
+            qp.read(table, idToSearch, colsToSearch);
+            estimatedTime += System.nanoTime() - startTime;
+            ClearCache.clear(args[0]);
+            // System.out.println(i);
+        }
+        System.out.println("Transaction 1 Time was: " + estimatedTime);
+
+        // Transaction Two: Speed of random accessing of two columns
+        estimatedTime = 0;
+        for (int i = 0; i < 1000; i++) {
+            colsToSearch = new ArrayList<>();
+            colsToSearch.add("Column " + random.nextInt(numCols));
+            colsToSearch.add("Column " + random.nextInt(numCols));
+            idToSearch = random.nextInt(numRecords) + 1;
+//            System.out.println(idToSearch);
+            startTime = System.nanoTime();
+            qp.read(table, idToSearch, colsToSearch);
+            estimatedTime += System.nanoTime() - startTime;
+            ClearCache.clear(args[0]);
+//            System.out.println(i);
+        }
+        System.out.println("Transaction 2 Time was: " + estimatedTime + "\n");
+
+        return;
+>>>>>>> 09012954cb37eb2a41444b1ba9e65d3602952a3a
 	}
 
 	// More complicated script for testing transactions
