@@ -71,7 +71,9 @@ public class TransactionTests {
         }
         System.out.println("Transaction 2 Time was: " + estimatedTime);
 		
-		
+		// Testing out testFunction script
+		double[] probabilities = {0.5, 0.5};
+		testFunction(2, 2, numRecords, 1000, probabilities, table, qp);
 		//surround statements with this code in order to get the time
 //		long startTime = System.nanoTime();
 		
@@ -80,7 +82,70 @@ public class TransactionTests {
 		
 		//
 	}
+
+	// More complicated script for testing transactions
+	// numCols is the number of columns that we can choose to sample from
+	// colsPerQuery is how many columns each query in the transaction will look up
+	// numReads is how many records we are reading
+	// probabilities is the array of weights we are sampling the numCols from
+	public static void testFunction(int numCols, int colsPerQuery, int numRecords, int numReads, double[] probabilities, Table table, QueryProcessor qp) {
+		long estimatedTime = 0;
+		// check if number of columns is equal to length of the probabilities input
+		if (probabilities.length != numCols) {
+			System.out.println("Length of probabilities input does not match number of columns.");
+			return;
+		}
+		if (colsPerQuery > numCols) {
+			System.out.println("The number of columns per query should not exceed the number of columns sampled from.");
+			return;
+		}
+		// check if numCols is less than number of columns in table
+		if (numCols > table.getNumCols()) {
+			System.out.println("Table only has " + table.getNumCols() + " columns.");
+			return;
+		}
+
+		// normalize the array of probabilities
+		double probabilitySum = 0;
+		for(i = 0; i < probabilities.length; i++) {
+			probabilitySum += probabilities[i];
+		}
+		double temp; //probably don't need this
+		for(i = 0; i < probabilities.length; i++) {
+			temp = probabilities[i] / probabilitySum;
+			probabilities[i] = temp;
+		}
+
+
+		for (int i = 0; i < numReads; i++) {
+            colsToSearch = new ArrayList<>();
+            int columnToRead;
+            for(int j = 0; j < colsPerQuery; j++) {}
+            	columnToRead = pickWeightedColumn(numCols, probabilities);
+            	colsToSearch.add("Column " + columnToRead);
+            }
+            idToSearch = random.nextInt(numRecords) + 1;
+//            System.out.println(idToSearch);
+            startTime = System.nanoTime();
+            qp.read(table, idToSearch, colsToSearch);
+            estimatedTime += System.nanoTime() - startTime;
+            ClearCache.clear(args[0]);
+//            System.out.println(i);
+        }
+        System.out.println("The Transaction Time was : " + estimatedTime);
+        return;
+	}
 	
+	public int pickWeightedColumn(int numCols, double[] probabilities) {
+		double randomNumber = Math.random();
+		double cumulativeProbability = 0.0;
+		for(int i = 0; i < numCols; i++) {
+			cumulativeProbability += probabilities[i];
+			if (randomNumber < cumulativeProbability) {
+				return i;
+			}
+		}
+	}
 	// Returns a random String of length input
 	public static String randomRecord(int length)	{
 

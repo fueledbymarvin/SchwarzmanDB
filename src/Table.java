@@ -111,4 +111,9 @@ public class Table {
         sb.append(tableUsage.toString());
         return sb.toString();
     }
+
+    public int getNumCols() {
+        
+        return tableUsage.getPrimary().length + tableUsage.getSecondary().length;
+    }
 }
