@@ -51,10 +51,11 @@ public class TransactionTests {
             startTime = System.nanoTime();
             qp.read(table, idToSearch, colsToSearch);
             estimatedTime += System.nanoTime() - startTime;
+            ClearCache.clear(args[0]);
 			// System.out.println(i);
         }
         System.out.println("The Total Elapsed Time was: " + estimatedTime + "\n");
-		
+
 		// Transaction Two: Speed of random accessing of columns
         System.out.println("Performing Test 2...");
         estimatedTime = 0;
@@ -66,6 +67,7 @@ public class TransactionTests {
             startTime = System.nanoTime();
             qp.read(table, idToSearch, colsToSearch);
             estimatedTime += System.nanoTime() - startTime;
+            ClearCache.clear(args[0]);
 //            System.out.println(i);
         }
         System.out.println("The Total Elapsed Time was: " + estimatedTime);
