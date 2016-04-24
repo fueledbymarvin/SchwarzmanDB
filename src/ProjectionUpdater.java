@@ -23,17 +23,17 @@ public class ProjectionUpdater extends Thread {
     public void run() {
 
         while (true) {
-            // Check for shutdown
-            synchronized (this) {
-                if (shutdown) {
-                    break;
-                }
-            }
-
             Table table;
             synchronized (updateQueue) {
                 // Wait if the queue is empty
                 while (updateQueue.isEmpty()) {
+                    // Check for shutdown
+                    synchronized (this) {
+                        if (shutdown) {
+                            return;
+                        }
+                    }
+
                     try {
                         updateQueue.wait();
                     } catch (InterruptedException e) {
@@ -59,16 +59,25 @@ public class ProjectionUpdater extends Thread {
                         out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
                     }
                 }
-                table.dump();
             } catch (IOException e) {
                 System.err.println("Could not update: " + e.toString());
             } finally {
                 table.readLock().unlock();
+            }
+
+            // Update table info
+            try {
+                table.dump();
+            } catch (IOException e) {
+                System.err.println("Could not update table info: " + e.toString());
             }
         }
     }
 
     synchronized public void shutdown() {
         shutdown = true;
+        synchronized (updateQueue) {
+            updateQueue.notifyAll();
+        }
     }
 }

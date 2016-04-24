@@ -109,7 +109,6 @@ public class Table {
         rwLock = new ReentrantReadWriteLock();
     }
 
-    // If this query triggers an update, the list contains the columns that need to be moved
     public boolean used(List<String> columns) {
 
         String key = getKey(columns);
@@ -124,17 +123,15 @@ public class Table {
         // Check if need to update column locations
         if (queries == period) {
             queries = 0;
-            boolean needsUpdate = false;
             for (Map.Entry<String, Projection> entry : projections.entrySet()) {
                 Projection p = entry.getValue();
                 String k = entry.getKey();
                 p.update(freshness);
                 if (p.getFile() == null && p.getUsage() / period > threshold) {
                     toCreate.add(k);
-                    needsUpdate = true;
                 }
             }
-            return needsUpdate;
+            return true;
         }
         return false;
     }
