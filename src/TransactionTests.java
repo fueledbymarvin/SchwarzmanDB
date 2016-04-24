@@ -69,21 +69,7 @@ public class TransactionTests {
             ClearCache.clear(args[0]);
 //            System.out.println(i);
         }
-<<<<<<< HEAD
         System.out.println("Transaction 2 Time was: " + estimatedTime);
-		
-		// Testing out testFunction script
-		double[] probabilities = {0.5, 0.5};
-		testFunction(2, 2, numRecords, 105, probabilities, table, qp);
-		//surround statements with this code in order to get the time
-//		long startTime = System.nanoTime();
-		
-//		long estimatedTime = System.nanoTime() - startTime;
-//		System.out.println("The Total Elapsed Time was :" + estimatedTime);
-		
-		//
-=======
-        System.out.println("Transaction 2 Time was: " + estimatedTime + "\n");
 
         // Second Test
         // With only one table
@@ -121,8 +107,11 @@ public class TransactionTests {
         }
         System.out.println("Transaction 2 Time was: " + estimatedTime + "\n");
 
+        // Testing out testFunction script
+        double[] probabilities = {0.5, 0.5};
+        testFunction(2, 2, numRecords, 105, probabilities, table, qp);
+
         return;
->>>>>>> 09012954cb37eb2a41444b1ba9e65d3602952a3a
 	}
 
 	// More complicated script for testing transactions
