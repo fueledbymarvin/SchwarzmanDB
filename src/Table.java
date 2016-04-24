@@ -144,6 +144,33 @@ public class Table {
         return proj;
     }
 
+    public Projection projectionToRead(List<String> cols) {
+
+        for (Projection proj : projections.values()) {
+            // Ordered by number of columns
+            // Returns smallest projection that contains all relevant columns
+            if (proj.getColumns().containsAll(cols)) {
+                return proj;
+            }
+        }
+        throw new IllegalArgumentException("Nonexistent columns");
+    }
+
+    public List<Projection> projectionsToWrite(List<String> cols) {
+
+        List<Projection> res = new ArrayList<>();
+        for (Projection proj : projections.values()) {
+            Set<String> projCols = proj.getColumns();
+            for (String col : cols) {
+                if (projCols.contains(col)) {
+                    res.add(proj);
+                    break;
+                }
+            }
+        }
+        return res;
+    }
+
     public int getNextId() {
         return nextId;
     }

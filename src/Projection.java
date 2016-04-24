@@ -17,7 +17,7 @@ public class Projection {
 
         this.usage = usage;
         useCount = 0;
-        cols = new TreeSet<>(); // stays sorted
+        cols = new TreeSet<>(); // columns stays sorted
         cols.addAll(CSV.split(key, ","));
     }
 
