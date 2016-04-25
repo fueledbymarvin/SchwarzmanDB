@@ -17,37 +17,13 @@ public class QueryProcessor {
 
         table.readLock().lock();
         try {
-            List<Record> records = new ArrayList<>();
-//            List<String> primaryColsToFetch = new ArrayList<>();
-//            List<String> secondaryColsToFetch = new ArrayList<>();
-//
-//            for (String column : columns) {
-//                if (table.isPrimary(column)) {
-//                    primaryColsToFetch.add(column);
-//                } else if (table.isSecondary(column)) {
-//                    secondaryColsToFetch.add(column);
-//                }
-//            }
-//
-//            Map<Integer, Map<String, String>> values = new HashMap<>();
-//
-//            if (primaryColsToFetch.size() > 0) {
-//                values = scanFile(Boolean.TRUE, table, primaryColsToFetch, values);
-//            }
-//
-//            if (secondaryColsToFetch.size() > 0) {
-//                values = scanFile(Boolean.FALSE, table, secondaryColsToFetch, values);
-//            }
-//
-//            // Convert saved values into records
-//            for (Map.Entry<Integer, Map<String, String>> entry : values.entrySet()) {
-//                records.add(new Record(table, entry.getKey(), entry.getValue()));
-//            }
-//
-//            // Update table usage
-//            if (table.used(columns)) {
-//                updateTable(table);
-//            }
+            Projection projection = table.projectionToRead(columns);
+            List<Record> records = scanFile(table, projection, columns);
+
+            // Update table usage
+            if (table.used(columns)) {
+                updateTable(table);
+            }
 
             return records;
         } finally {
@@ -55,105 +31,74 @@ public class QueryProcessor {
         }
     }
 
-    private Map<Integer, Map<String, String>> scanFile(Boolean isPrimary, Table table, List<String> columns, Map<Integer, Map<String, String>> values) throws IOException {
+    private List<Record> scanFile(Table table, Projection projection, List<String> columns) throws IOException {
+
+        List<Record> records = new ArrayList<>();
 
         // Open appropriate file and save its column names
-//        File file;
-//        List<String> tableColumns;
-//        if (isPrimary) {
-//            file = table.getPrimary();
-//            tableColumns = table.getPrimaryColumns();
-//        } else {
-//            file = table.getSecondary();
-//            tableColumns = table.getSecondaryColumns();
-//        }
-//
-//        // Iterate through file and save columns in the values map
-//        List<String> splitLine;
-//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-//            for (String line = br.readLine(); line != null; line = br.readLine()) {
-//                splitLine = CSV.split(line, ",");
-//                for (String column : columns) {
-//                    Map<String, String> columnValuePairs;
-//                    int id = Integer.parseInt(splitLine.get(0));
-//                    String newValue = splitLine.get(tableColumns.indexOf(column) + 1);
-//
-//                    if ((columnValuePairs = values.get(id)) == null) {
-//                        columnValuePairs = new HashMap<>();
-//                    }
-//                    columnValuePairs.put(column, newValue);
-//                    values.put(id, columnValuePairs);
-//                }
-//            }
-//        }
+        File file = projection.getFile();
+        List<String> projectionColumns = new ArrayList<String>(projection.getColumns());
 
-        return values;
+        // Iterate through file and save columns in the values map
+        List<String> splitLine;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                Map<String, String> values = new HashMap<>();
+                splitLine = CSV.split(line, ",");
+                int id = Integer.parseInt(splitLine.get(0));
+
+                for (String column : columns) {
+                    String newValue = splitLine.get(projectionColumns.indexOf(column) + 1); // + 1 to skip id
+                    values.put(column, newValue);
+                }
+                records.add(new Record(table, id, values));
+            }
+        }
+
+        return records;
     }
 
     public Record read(Table table, int id, List<String> columns) throws IOException {
 
         table.readLock().lock();
         try {
-            Map<String, String> values = new HashMap<>();
-//            List<String> primaryColsToFetch = new ArrayList<>();
-//            List<String> secondaryColsToFetch = new ArrayList<>();
-//
-//            for (String column : columns) {
-//                if (table.isPrimary(column)) {
-//                    primaryColsToFetch.add(column);
-//                } else if (table.isSecondary(column)) {
-//                    secondaryColsToFetch.add(column);
-//                }
-//            }
-//
-//            if (primaryColsToFetch.size() > 0) {
-//                values = searchFileForRecord(Boolean.TRUE, table, id, primaryColsToFetch, values);
-//            }
-//
-//            if (secondaryColsToFetch.size() > 0) {
-//                values = searchFileForRecord(Boolean.FALSE, table, id, secondaryColsToFetch, values);
-//            }
-//
-//            // Update table usage
-//            if (table.used(columns)) {
-//                updateTable(table);
-//            }
+            Projection projection = table.projectionToRead(columns);
+            Record record = findRecord(table, id, projection, columns);
 
-            return new Record(table, id, values);
+            // Update table usage
+            if (table.used(columns)) {
+                updateTable(table);
+            }
+
+            return record;
         } finally {
             table.readLock().unlock();
         }
     }
 
-    private Map<String, String> searchFileForRecord(Boolean isPrimary, Table table, int id, List<String> columns, Map<String, String> values) throws IOException {
+    private Record findRecord(Table table, int id, Projection projection, List<String> columns) throws IOException {
 
         // Open appropriate file and save its column names
-//        File file;
-//        List<String> tableColumns;
-//        if (isPrimary) {
-//            file = table.getPrimary();
-//            tableColumns = table.getPrimaryColumns();
-//        } else {
-//            file = table.getSecondary();
-//            tableColumns = table.getSecondaryColumns();
-//        }
-//
-//        // Iterate through file and save columns in the values map
-//        List<String> splitLine;
-//        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-//            for (String line = br.readLine(); line != null; line = br.readLine()) {
-//                splitLine = CSV.split(line, ",");
-//                for (String column : columns) {
-//                    int currentId = Integer.parseInt(splitLine.get(0));
-//                    if (currentId == id) {
-//                        String newValue = splitLine.get(tableColumns.indexOf(column) + 1);
-//                        values.put(column, newValue);
-//                    }
-//                }
-//            }
-//        }
+        File file = projection.getFile();
+        List<String> projectionColumns = new ArrayList<String>(projection.getColumns());
 
-        return values;
+        // Iterate through file and save columns in the values map
+        List<String> splitLine;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            for (String line = br.readLine(); line != null; line = br.readLine()) {
+                splitLine = CSV.split(line, ",");
+                int currentId = Integer.parseInt(splitLine.get(0));
+                if (currentId == id) {
+                    Map<String, String> values = new HashMap<>();
+                    for (String column : columns) {
+                        String newValue = splitLine.get(projectionColumns.indexOf(column) + 1); // + 1 to skip id
+                        values.put(column, newValue);
+                    }
+                    return new Record(table, id, values);
+                }
+            }
+        }
+        return new Record(table, id, new HashMap<>());
     }
 
     public boolean write(Record record) throws IOException {
@@ -163,16 +108,18 @@ public class QueryProcessor {
             return false;
         }
         try {
-//            Map<String, String> vals = record.getValues();
-//            int id = table.getNextId();
-//            table.incrementNextId();
-//            try (
-//                    Writer pOut = new BufferedWriter(new FileWriter(table.getPrimary(), true));
-//                    Writer sOut = new BufferedWriter(new FileWriter(table.getSecondary(), true))
-//            ) {
-//                pOut.write(createRow(id, table.getPrimaryColumns(), vals)+"\n");
-//                sOut.write(createRow(id, table.getSecondaryColumns(), vals)+"\n");
-//            }
+            Map<String, String> vals = record.getValues();
+            List<String> cols = record.getCols();
+            int id = table.getNextId();
+            table.incrementNextId();
+            List<Projection> projections = table.projectionsToWrite(cols);
+            for (Projection projection : projections) {
+                try (
+                    Writer pOut = new BufferedWriter(new FileWriter(projection.getFile(), true));
+                ) {
+                    pOut.write(createRow(id, new ArrayList<String>(projection.getColumns()), vals)+"\n");
+                }
+            }
             table.dump();
             return true;
         } finally {

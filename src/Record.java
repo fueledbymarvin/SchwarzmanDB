@@ -3,6 +3,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Created by Frank on 4/12/16.
@@ -39,6 +40,15 @@ public class Record {
 
     public Map<String, String> getValues() {
         return values;
+    }
+
+    public List<String> getCols() {
+        List<String> cols = new ArrayList<>();
+        for (Map.Entry<String, String> map : values.entrySet()){
+
+            cols.add(map.getKey());
+        }
+        return cols;
     }
 
     public Table getTable() {
