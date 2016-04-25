@@ -84,10 +84,11 @@ public class QueryProcessor {
 
         // Iterate through file and save columns in the values map
         List<String> splitLine;
+        int currentId;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 splitLine = CSV.split(line, ",");
-                int currentId = Integer.parseInt(splitLine.get(0));
+                currentId = Integer.parseInt(splitLine.get(0));
                 if (currentId == id) {
                     Map<String, String> values = new HashMap<>();
                     for (String column : columns) {

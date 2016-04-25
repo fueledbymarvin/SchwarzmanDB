@@ -42,9 +42,11 @@ public class TransactionTests {
             password = args[0];
         }
 
-        // Use testFunction script
-        double[] probabilities = {0.5, 0.5};
-        testFunction(2, 2, numRecords, 105, probabilities, table, qp, password);
+        // Test 1
+        double[] prob1 = {1.0};
+        testFunction(1, 1, numRecords, 105, prob1, table, qp, password);
+        double[] prob2 = {0.5, 0.5};
+        testFunction(2, 2, numRecords, 105, prob2, table, qp, password);
 
         updater.shutdown();
 
@@ -85,16 +87,14 @@ public class TransactionTests {
 
         Random random = new Random();
         int idToSearch;
-        List<String> colsToSearch = new ArrayList<>();
+        List<String> colsToSearch;
 
 		for (i = 0; i < numReads; i++) {
             colsToSearch = new ArrayList<>();
             int columnToRead;
             for (int j = 0; j < colsPerQuery; j++) {
             	columnToRead = pickWeightedColumn(numCols, probabilities);
-                if (columnToRead != -1) {
-                    colsToSearch.add("Column " + columnToRead);
-                }
+                colsToSearch.add("Column " + columnToRead);
             }
             idToSearch = random.nextInt(numRecords) + 1;
             startTime = System.nanoTime();
@@ -117,7 +117,7 @@ public class TransactionTests {
 				return i;
 			}
 		}
-        return -1;
+        return 0;
 	}
 
 	// Returns a random String of length input
