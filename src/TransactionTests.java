@@ -10,51 +10,58 @@ public class TransactionTests {
 	public static void main(String args[]) throws IOException {
 
 		Queue<Update> updateQueue = new LinkedList<>();
-        QueryProcessor qp = new QueryProcessor(updateQueue);
-        ProjectionUpdater updater = new ProjectionUpdater(updateQueue, qp);
-        updater.start();
+		QueryProcessor qp = new QueryProcessor(updateQueue);
+		ProjectionUpdater updater = new ProjectionUpdater(updateQueue, qp);
+		updater.start();
 
-        // Test parameters
-        int numCols = 10;
-        int numRecords = 10000;
+		// Test parameters
+		int numCols = 10;
+		int numRecords = 10000;
 		int recordLength = 100;
 
 		// Create and setup new table
-//		deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-//		Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+		// deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+		// Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
 		deleteDirectory(new File("/home/marvin/Downloads/test"));
 		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
 		for (int i = 0; i < numCols; i++){
-        	columns.add("Column " + i);
-        }
-        metadata.createTable("Table", columns);
-        Table table = metadata.get("Table");
+			columns.add("Column " + i);
+		}
+		metadata.createTable("Table", columns);
+		Table table = metadata.get("Table");
 
-        // Insert Random Records
-        System.out.println("Writing random records...");
-        long startTime = System.nanoTime();
-        tablePopulator(table, qp, recordLength, numRecords);
+		// Insert Random Records
+		System.out.println("Writing random records...");
+		long startTime = System.nanoTime();
+		tablePopulator(table, qp, recordLength, numRecords);
 		long estimatedTime = System.nanoTime() - startTime;
 		System.out.println("Total Elapsed Time was: " + estimatedTime + "\n");
 
-        // Obtain password for permissions to clear cache
-        String password;
-        if (args.length == 0) {
-            password = ""; // no password provided
-        } else {
-            password = args[0];
-        }
+		// Obtain password for permissions to clear cache
+		String password;
+		if (args.length == 0) {
+			password = ""; // no password provided
+		} else {
+			password = args[0];
+		}
 
-		// Test 1
+		// Test 1 -- Transaction 1 accesses the same column about 90% of the time, with the other 10% split evenly
+		// between the other 9 columns. This will result in a new projection that will eventually increase throughput.
+		// Transaction 2 accesses every column at an equal probability, so it doesn't have the same benefits of
+		// Transaction 1.
 		double[] prob1 = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
-		testFunction(10, 1, numRecords, 1000, prob1, table, qp, password);
+		TransactionTestResult test1 = testFunction(10, 1, numRecords, 3000, prob1, table, qp, password);
+		System.out.println("The Transaction Time was: " + test1.getTime());
+		System.out.println("Throughput: " + test1.getThroughput());
 		double[] prob2 = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-		testFunction(10, 1, numRecords, 1000, prob2, table, qp, password);
+		TransactionTestResult test2 = testFunction(10, 1, numRecords, 3000, prob2, table, qp, password);
+		System.out.println("The Transaction Time was: " + test2.getTime());
+		System.out.println("Throughput: " + test2.getThroughput());
 
-        updater.shutdown();
+		updater.shutdown();
 
-        return;
+		return;
 	}
 
 	// More complicated script for testing transactions
@@ -62,24 +69,26 @@ public class TransactionTests {
 	// colsPerQuery is how many columns each query in the transaction will look up
 	// numReads is how many records we are reading
 	// probabilities is the array of weights we are sampling the numCols from
-	public static void testFunction(int numCols, int colsPerQuery, int numRecords, int numReads, double[] probabilities, Table table, QueryProcessor qp, String password) throws IOException {
+	public static TransactionTestResult testFunction(int numCols, int colsPerQuery, int numRecords, int numReads, double[] probabilities, Table table, QueryProcessor qp, String password) throws IOException {
 
-        long startTime = 0;
-        long estimatedTime = 0;
+		long startTime = 0;
+		long estimatedTime = 0;
+		ThroughputCounter throughput = new ThroughputCounter();
+		throughput.start();
 
 		// check if number of columns is equal to length of the probabilities input
 		if (probabilities.length != numCols) {
 			System.out.println("Length of probabilities input does not match number of columns.");
-			return;
+			return new TransactionTestResult();
 		}
 		if (colsPerQuery > numCols) {
 			System.out.println("The number of columns per query should not exceed the number of columns sampled from.");
-			return;
+			return new TransactionTestResult();
 		}
 
 		// normalize the array of probabilities
 		double probabilitySum = 0;
-        int i;
+		int i;
 		for (i = 0; i < probabilities.length; i++) {
 			probabilitySum += probabilities[i];
 		}
@@ -89,27 +98,29 @@ public class TransactionTests {
 			probabilities[i] = temp;
 		}
 
-        Random random = new Random();
-        int idToSearch;
-        List<String> colsToSearch;
+		Random random = new Random();
+		int idToSearch;
+		List<String> colsToSearch;
 
 		for (i = 0; i < numReads; i++) {
-            colsToSearch = new ArrayList<>();
-            int columnToRead;
-            for (int j = 0; j < colsPerQuery; j++) {
-            	columnToRead = pickWeightedColumn(numCols, probabilities);
-                colsToSearch.add("Column " + columnToRead);
-            }
-            idToSearch = random.nextInt(numRecords) + 1;
-            startTime = System.nanoTime();
-            qp.read(table, idToSearch, colsToSearch);
-            estimatedTime += System.nanoTime() - startTime;
-            if (password.length() > 0) {
-                ClearCache.clear(password);
-            }
-        }
-        System.out.println("The Transaction Time was : " + estimatedTime);
-        return;
+			colsToSearch = new ArrayList<>();
+			int columnToRead;
+			for (int j = 0; j < colsPerQuery; j++) {
+				columnToRead = pickWeightedColumn(numCols, probabilities);
+				colsToSearch.add("Column " + columnToRead);
+			}
+			idToSearch = random.nextInt(numRecords) + 1;
+			startTime = System.nanoTime();
+			qp.read(table, idToSearch, colsToSearch);
+			throughput.increment();
+			estimatedTime += System.nanoTime() - startTime;
+			if (password.length() > 0) {
+				ClearCache.clear(password);
+			}
+		}
+
+		List<Integer> throughput_results = throughput.stopAndReturnThroughput();
+		return new TransactionTestResult(throughput_results, estimatedTime);
 	}
 
 	public static int pickWeightedColumn(int numCols, double[] probabilities) {
@@ -121,11 +132,11 @@ public class TransactionTests {
 				return i;
 			}
 		}
-        return 0;
+		return 0;
 	}
 
 	// Returns a random String of length input
-	public static String randomRecord(int length)	{
+	public static String randomRecord(int length) {
 
 		StringBuilder sb = new StringBuilder(length);
 		Random random = new Random();
@@ -136,7 +147,7 @@ public class TransactionTests {
 		return sb.toString();
 	}
 
-    // Writes records of random strings into the provided table
+	// Writes records of random strings into the provided table
 	public static void tablePopulator(Table table, QueryProcessor qp, int recordLength, int numRecords) throws IOException {
 
 		for (int i = 0; i < numRecords; i++) {
