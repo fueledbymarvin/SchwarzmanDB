@@ -44,6 +44,7 @@ public class ProjectionUpdater extends Thread {
 
             table.readLock().lock();
             try {
+
                 // Read all records
                 List<String> cols = table.getColumns();
                 List<Record> records = queryProcessor.scan(table, cols);
@@ -51,6 +52,8 @@ public class ProjectionUpdater extends Thread {
                 Queue<List<String>> toCreate = table.getToCreate();
                 List<String> projCols;
                 while ((projCols = toCreate.poll()) != null) {
+                    Timer timer = new Timer();
+
                     // Write projection
                     Projection proj = table.createProjectionFile(projCols);
                     try (
@@ -60,8 +63,9 @@ public class ProjectionUpdater extends Thread {
                             out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
                         }
                     }
-                }
 
+                    System.out.println("ProjectionUpdater time: " + timer.getNano());
+                }
             } catch (IOException e) {
                 System.err.println("Could not update: " + e.toString());
             } finally {
