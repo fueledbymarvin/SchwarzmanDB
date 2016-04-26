@@ -20,7 +20,7 @@ public class Table {
     private int period; // number of queries to process before update
     private double freshness; // proportion of overall usage that the latest measurement counts for
     private double threshold;
-    private Queue<String> toCreate;
+    private Queue<List<String>> toCreate;
     private Map<String, Projection> projections; // set of all projections sorted by size ascending
     private List<String> columns;
     private ReadWriteLock rwLock;
@@ -128,7 +128,7 @@ public class Table {
                 String k = entry.getKey();
                 p.update(freshness);
                 if (p.getFile() == null && p.getUsage() / period > threshold) {
-                    toCreate.add(k);
+                    toCreate.add(new ArrayList<>(p.getColumns()));
                 }
             }
             return true;
@@ -189,6 +189,10 @@ public class Table {
 
     public Lock writeLock() {
         return rwLock.writeLock();
+    }
+
+    public Queue<List<String>> getToCreate() {
+        return toCreate;
     }
 
     public String toString() {

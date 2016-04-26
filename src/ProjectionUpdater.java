@@ -49,16 +49,19 @@ public class ProjectionUpdater extends Thread {
                 List<String> cols = table.getColumns();
                 List<Record> records = queryProcessor.scan(table, cols);
 
-                // Write projection
-                Projection proj = table.createProjectionFile(cols);
-                List<String> projCols = new ArrayList<>(proj.getColumns());
-                try (
-                        Writer out = new BufferedWriter(new FileWriter(proj.getFile(), true))
-                ) {
-                    for (Record r : records) {
-                        out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
+                Queue<List<String>> toCreate = table.getToCreate();
+                for (List<String> projCols = toCreate.poll(); !toCreate.isEmpty(); projCols = toCreate.poll()) {
+                    // Write projection
+                    Projection proj = table.createProjectionFile(projCols);
+                    try (
+                            Writer out = new BufferedWriter(new FileWriter(proj.getFile(), true))
+                    ) {
+                        for (Record r : records) {
+                            out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
+                        }
                     }
                 }
+
             } catch (IOException e) {
                 System.err.println("Could not update: " + e.toString());
             } finally {

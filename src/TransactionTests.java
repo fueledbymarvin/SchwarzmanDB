@@ -1,4 +1,6 @@
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class TransactionTests {
@@ -7,7 +9,7 @@ public class TransactionTests {
 
 	public static void main(String args[]) throws IOException {
 
-        Queue<Table> updateQueue = new LinkedList<>();
+		Queue<Table> updateQueue = new LinkedList<>();
         QueryProcessor qp = new QueryProcessor(updateQueue);
         ProjectionUpdater updater = new ProjectionUpdater(updateQueue, qp);
         updater.start();
@@ -18,8 +20,9 @@ public class TransactionTests {
 		int recordLength = 100;
 
 		// Create and setup new table
-        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
-//		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
+        // Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+		deleteDirectory(new File("/home/marvin/Downloads/test"));
+		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
 		for (int i = 0; i < numCols; i++){
         	columns.add("Column " + i);
@@ -149,5 +152,22 @@ public class TransactionTests {
 			Record record = new Record(table, data);
 			qp.write(record);
 		}
+	}
+
+	public static boolean deleteDirectory(File directory) {
+		if(directory.exists()){
+			File[] files = directory.listFiles();
+			if(null!=files){
+				for(int i=0; i<files.length; i++) {
+					if(files[i].isDirectory()) {
+						deleteDirectory(files[i]);
+					}
+					else {
+						files[i].delete();
+					}
+				}
+			}
+		}
+		return(directory.delete());
 	}
 }

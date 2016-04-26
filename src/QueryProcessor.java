@@ -80,7 +80,7 @@ public class QueryProcessor {
 
         // Open appropriate file and save its column names
         File file = projection.getFile();
-        List<String> projectionColumns = new ArrayList<String>(projection.getColumns());
+        List<String> projectionColumns = new ArrayList<>(projection.getColumns());
 
         // Iterate through file and save columns in the values map
         List<String> splitLine;
@@ -99,15 +99,13 @@ public class QueryProcessor {
                 }
             }
         }
-        return new Record(table, id, new HashMap<>());
+        return null;
     }
 
     public boolean write(Record record) throws IOException {
 
         Table table = record.getTable();
-        if (!table.writeLock().tryLock()) {
-            return false;
-        }
+        table.writeLock().lock();
         try {
             Map<String, String> vals = record.getValues();
             List<String> cols = record.getCols();
