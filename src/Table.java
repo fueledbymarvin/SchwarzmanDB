@@ -32,7 +32,7 @@ public class Table {
             @Override
             public int compare(String s1, String s2) {
                 int size1 = CSV.split(s1, ",").size();
-                int size2 = CSV.split(s1, ",").size();
+                int size2 = CSV.split(s2, ",").size();
                 return Integer.compare(size1, size2);
             }
         });
@@ -88,11 +88,6 @@ public class Table {
     }
 
     // brand new table
-    public Table(Path dataPath, String name, List<String> columns, int period, double freshness, double threshold) throws IOException {
-
-        this(dataPath, name, columns, period, freshness, threshold, true);
-    }
-
     public Table(Path dataPath, String name, List<String> columns, int period, double freshness, double threshold, boolean projectionsEnabled) throws IOException {
 
         this(dataPath, name, columns, 1, period, freshness, threshold, newSortedProjMap(), projectionsEnabled);
@@ -135,7 +130,7 @@ public class Table {
             for (Map.Entry<String, Projection> entry : projections.entrySet()) {
                 Projection p = entry.getValue();
                 p.update(freshness);
-                if (p.getFile() == null && p.getUsage() / period > threshold) {
+                if (!p.hasFile() && p.getUsage() / period > threshold) {
                     toCreate.add(new ArrayList<>(p.getColumns()));
                 }
             }
@@ -157,7 +152,7 @@ public class Table {
         for (Projection proj : projections.values()) {
             // Ordered by number of columns
             // Returns smallest projection that contains all relevant columns
-            if (proj.getColumns().containsAll(cols)) {
+            if (proj.hasFile() && proj.getColumns().containsAll(cols)) {
                 return proj;
             }
         }
@@ -170,7 +165,7 @@ public class Table {
         for (Projection proj : projections.values()) {
             Set<String> projCols = proj.getColumns();
             for (String col : cols) {
-                if (projCols.contains(col)) {
+                if (proj.hasFile() && projCols.contains(col)) {
                     res.add(proj);
                     break;
                 }

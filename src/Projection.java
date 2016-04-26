@@ -54,6 +54,10 @@ public class Projection {
         this.file = file;
     }
 
+    public boolean hasFile() {
+        return file != null;
+    }
+
     @Override
     public String toString() {
 

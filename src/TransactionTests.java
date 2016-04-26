@@ -48,9 +48,9 @@ public class TransactionTests {
 
 		// Test 1
 		double[] prob1 = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
-		testFunction(10, 1, numRecords, 105, prob1, table, qp, password);
+		testFunction(10, 1, numRecords, 1000, prob1, table, qp, password);
 		double[] prob2 = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-		testFunction(10, 1, numRecords, 105, prob2, table, qp, password);
+		testFunction(10, 1, numRecords, 1000, prob2, table, qp, password);
 
         updater.shutdown();
 

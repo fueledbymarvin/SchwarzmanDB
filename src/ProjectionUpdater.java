@@ -49,7 +49,8 @@ public class ProjectionUpdater extends Thread {
                 List<Record> records = queryProcessor.scan(table, cols);
 
                 Queue<List<String>> toCreate = table.getToCreate();
-                for (List<String> projCols = toCreate.poll(); !toCreate.isEmpty(); projCols = toCreate.poll()) {
+                List<String> projCols;
+                while ((projCols = toCreate.poll()) != null) {
                     // Write projection
                     Projection proj = table.createProjectionFile(projCols);
                     try (

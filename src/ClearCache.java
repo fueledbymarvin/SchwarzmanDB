@@ -23,17 +23,17 @@ public class ClearCache {
 			String[] cmd = {"/bin/zsh","-c","echo "+pass+" | sudo -S src/clearCache.sh"};
 			Process pb = Runtime.getRuntime().exec(cmd);
 
-			String line;
-			BufferedReader input = new BufferedReader(new InputStreamReader(pb.getInputStream()));
-			while ((line = input.readLine()) != null) {
-				System.out.println(line);
-			}
-			input.close();
-			BufferedReader err = new BufferedReader(new InputStreamReader(pb.getErrorStream()));
-			while ((line = err.readLine()) != null) {
-				System.out.println(line);
-			}
-			err.close();
+//			String line;
+//			BufferedReader input = new BufferedReader(new InputStreamReader(pb.getInputStream()));
+//			while ((line = input.readLine()) != null) {
+//				System.out.println(line);
+//			}
+//			input.close();
+//			BufferedReader err = new BufferedReader(new InputStreamReader(pb.getErrorStream()));
+//			while ((line = err.readLine()) != null) {
+//				System.out.println(line);
+//			}
+//			err.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
