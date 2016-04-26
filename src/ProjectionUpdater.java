@@ -47,6 +47,10 @@ public class ProjectionUpdater extends Thread {
             Projection proj = update.getProjection();
             switch (update.getAction()) {
                 case CREATE:
+                    if (proj.hasFile()) {
+                        continue;
+                    }
+                    Debug.DEBUG("Creating projection: " + proj.getColumns());
                     table.readLock().lock();
                     try {
                         // Read all records

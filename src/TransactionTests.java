@@ -51,11 +51,11 @@ public class TransactionTests {
 		// Transaction 2 accesses every column at an equal probability, so it doesn't have the same benefits of
 		// Transaction 1.
 		double[] prob1 = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
-		TransactionTestResult test1 = testFunction(10, 1, numRecords, 3000, prob1, table, qp, password);
+		TransactionTestResult test1 = testFunction(10, 1, numRecords, 1000, prob1, table, qp, password);
 		System.out.println("The Transaction Time was: " + test1.getTime());
 		System.out.println("Throughput: " + test1.getThroughput());
 		double[] prob2 = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-		TransactionTestResult test2 = testFunction(10, 1, numRecords, 3000, prob2, table, qp, password);
+		TransactionTestResult test2 = testFunction(10, 1, numRecords, 1000, prob2, table, qp, password);
 		System.out.println("The Transaction Time was: " + test2.getTime());
 		System.out.println("Throughput: " + test2.getThroughput());
 
@@ -115,7 +115,7 @@ public class TransactionTests {
 			throughput.increment();
 			estimatedTime += System.nanoTime() - startTime;
 			if (password.length() > 0) {
-				ClearCache.clear(password);
+				// ClearCache.clear(password);
 			}
 		}
 
