@@ -22,7 +22,7 @@ public class Test {
         List<String> columns2 = new ArrayList<>();
         columns2.add("item");
         columns2.add("stock");
-        metadata.createTable("inventory", columns2);
+        metadata.createTable("inventory", columns2, false);
 
         Metadata loaded = Metadata.load("/home/marvin/Downloads/sample");
         Table ppl = loaded.get("people");

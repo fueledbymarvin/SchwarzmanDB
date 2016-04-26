@@ -87,12 +87,17 @@ public class Metadata {
 
     public void createTable(String name, List<String> columns) throws IOException {
 
-        createTable(name, columns, period, freshness, threshold);
+        createTable(name, columns, period, freshness, threshold, true);
+    }
+
+    public void createTable(String name, List<String> columns, boolean projectionsEnabled) throws IOException {
+
+        createTable(name, columns, period, freshness, threshold, projectionsEnabled);
     }
     
-    public void createTable(String name, List<String> columns, int tablePeriod, double tableFreshness, double tableThreshold) throws IOException {
+    public void createTable(String name, List<String> columns, int tablePeriod, double tableFreshness, double tableThreshold, boolean projectionsEnabled) throws IOException {
 
-        Table table = new Table(dataPath, name, columns, tablePeriod, tableFreshness, tableThreshold);
+        Table table = new Table(dataPath, name, columns, tablePeriod, tableFreshness, tableThreshold, projectionsEnabled);
         table.dump();
         tables.put(name, table);
         try (Writer out = new BufferedWriter(new FileWriter(metadata, true))) {

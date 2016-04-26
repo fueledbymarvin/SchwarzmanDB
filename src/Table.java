@@ -24,6 +24,7 @@ public class Table {
     private Map<String, Projection> projections; // set of all projections sorted by size ascending
     private List<String> columns;
     private ReadWriteLock rwLock;
+    private boolean projectionsEnabled;
 
     private static Map<String, Projection> newSortedProjMap() {
 
@@ -42,6 +43,8 @@ public class Table {
         File file = Paths.get(dataPath.toString(), name).toFile();
         try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             String line;
+            line = forceReadLine(in);
+            boolean projectionsEnabled = Boolean.parseBoolean(line);
             line = forceReadLine(in);
             int nextId = Integer.parseInt(line);
             line = forceReadLine(in);
@@ -71,7 +74,7 @@ public class Table {
                 projections.put(key, proj);
             }
 
-            return new Table(dataPath, name, columns, nextId, period, freshness, threshold, projections);
+            return new Table(dataPath, name, columns, nextId, period, freshness, threshold, projections, projectionsEnabled);
         }
     }
 
@@ -87,13 +90,18 @@ public class Table {
     // brand new table
     public Table(Path dataPath, String name, List<String> columns, int period, double freshness, double threshold) throws IOException {
 
-        this(dataPath, name, columns, 1, period, freshness, threshold, newSortedProjMap());
+        this(dataPath, name, columns, period, freshness, threshold, true);
+    }
+
+    public Table(Path dataPath, String name, List<String> columns, int period, double freshness, double threshold, boolean projectionsEnabled) throws IOException {
+
+        this(dataPath, name, columns, 1, period, freshness, threshold, newSortedProjMap(), projectionsEnabled);
         String key = getKey(columns);
         projections.put(key, new Projection(key, 0));
         createProjectionFile(columns);
     }
 
-    private Table(Path dataPath, String name, List<String> columns, int nextId, int period, double freshness, double threshold, Map<String, Projection> projections) {
+    private Table(Path dataPath, String name, List<String> columns, int nextId, int period, double freshness, double threshold, Map<String, Projection> projections, boolean projectionsEnabled) {
 
         this.dataPath = dataPath;
         this.name = name;
@@ -103,6 +111,7 @@ public class Table {
         this.freshness = freshness;
         this.threshold = threshold;
         this.projections = projections;
+        this.projectionsEnabled = projectionsEnabled;
         tableInfo = Paths.get(dataPath.toString(), name).toFile();
         queries = 0;
         toCreate = new LinkedList<>();
@@ -125,7 +134,6 @@ public class Table {
             queries = 0;
             for (Map.Entry<String, Projection> entry : projections.entrySet()) {
                 Projection p = entry.getValue();
-                String k = entry.getKey();
                 p.update(freshness);
                 if (p.getFile() == null && p.getUsage() / period > threshold) {
                     toCreate.add(new ArrayList<>(p.getColumns()));
@@ -198,6 +206,8 @@ public class Table {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
+        sb.append(projectionsEnabled);
+        sb.append("\n");
         sb.append(nextId);
         sb.append("\n");
         sb.append(period);
