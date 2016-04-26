@@ -20,7 +20,8 @@ public class TransactionTests {
 		int recordLength = 100;
 
 		// Create and setup new table
-        // Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+//		deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+//		Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
 		deleteDirectory(new File("/home/marvin/Downloads/test"));
 		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
@@ -45,11 +46,11 @@ public class TransactionTests {
             password = args[0];
         }
 
-        // Test 1
-        double[] prob1 = {1.0};
-        testFunction(1, 1, numRecords, 105, prob1, table, qp, password);
-        double[] prob2 = {0.5, 0.5};
-        testFunction(2, 2, numRecords, 105, prob2, table, qp, password);
+		// Test 1
+		double[] prob1 = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
+		testFunction(10, 1, numRecords, 105, prob1, table, qp, password);
+		double[] prob2 = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
+		testFunction(10, 1, numRecords, 105, prob2, table, qp, password);
 
         updater.shutdown();
 
