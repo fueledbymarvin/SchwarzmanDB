@@ -9,7 +9,7 @@ public class Test {
 
 //        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/");
         Metadata metadata = new Metadata("/home/marvin/Downloads/", "sample");
-        Queue<Table> updateQueue = new LinkedList<>();
+        Queue<Update> updateQueue = new LinkedList<>();
         QueryProcessor qp = new QueryProcessor(updateQueue);
         ProjectionUpdater updater = new ProjectionUpdater(updateQueue, qp);
         updater.start();

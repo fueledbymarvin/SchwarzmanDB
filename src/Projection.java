@@ -1,7 +1,5 @@
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by marvin on 4/24/16.
@@ -10,36 +8,71 @@ public class Projection {
 
     private Set<String> cols;
     private File file;
-    private int useCount;
-    private double usage;
+    private int readCount, writeCount;
+    private double readFreq, writeFreq;
+    private Config config;
 
-    public Projection(String key, double usage) {
+    public Projection(String key, double readFreq, double writeFreq, Config config) {
 
-        this.usage = usage;
-        useCount = 0;
+        this.readFreq = readFreq;
+        this.writeFreq = writeFreq;
+        this.config = config;
+        readCount = 0;
+        writeCount = 0;
         cols = new TreeSet<>(); // columns stays sorted
         cols.addAll(CSV.split(key, ","));
     }
 
-    public Projection(String key, double usage, File file) {
+    public Projection(String key, double readFreq, double writeFreq, Config config, File file) {
 
-        this(key, usage);
+        this(key, readFreq, writeFreq, config);
         this.file = file;
     }
 
-    public void increment() {
+    public Update.Action read(int nCols, int nRecords, int colDiff) {
 
-        useCount++;
+        readCount++;
+        return check(nCols, nRecords, colDiff);
     }
 
-    public void update(double freshness) {
+    public Update.Action wrote(int nCols, int nRecords, int colDiff) {
 
-        usage = usage*(1-freshness) + freshness*useCount;
-        useCount = 0;
+        writeCount++;
+        return check(nCols, nRecords, colDiff);
     }
 
-    public double getUsage() {
-        return usage;
+    private Update.Action check(int nCols, int nRecords, int colDiff) {
+
+        int period = config.getPeriod();
+        if (readCount + writeCount == period) {
+            double freshness = config.getFreshness();
+            readFreq = readFreq*(1-freshness) + freshness*readCount/period;
+            writeFreq = writeFreq*(1-freshness) + freshness*writeCount/period;
+            readCount = 0;
+            writeCount = 0;
+        }
+
+        // Don't update the default projection
+        if (cols.size() == nCols) {
+            return null;
+        }
+
+        // TODO BETTER FORMULA
+        double writeCost = writeFreq;
+        double readBenefit = readFreq * colDiff;
+        double ratio;
+        if (writeCost == 0) {
+            ratio = config.getCreateThreshold();
+        } else {
+            ratio = readBenefit / writeCost;
+        }
+        if (!hasFile() && ratio >= config.getCreateThreshold()) {
+            return Update.Action.CREATE;
+        } else if (hasFile() && ratio <= config.getDestroyThreshold()) {
+            return Update.Action.DESTROY;
+        } else {
+            return null;
+        }
     }
 
     public Set<String> getColumns() {
@@ -64,7 +97,8 @@ public class Projection {
         StringBuilder sb = new StringBuilder();
         sb.append(CSV.join(new ArrayList<>(cols), ","));
         sb.append("\n");
-        sb.append(usage);
+        sb.append(readFreq);
+        sb.append(writeFreq);
         if (file != null) {
             sb.append(",");
             sb.append(file.getName());

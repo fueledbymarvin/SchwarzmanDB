@@ -6,9 +6,9 @@ import java.util.*;
  */
 public class QueryProcessor {
 
-    private Queue<Table> updateQueue;
+    private Queue<Update> updateQueue;
 
-    public QueryProcessor(Queue<Table> updateQueue) {
+    public QueryProcessor(Queue<Update> updateQueue) {
 
         this.updateQueue = updateQueue;
     }
@@ -19,11 +19,7 @@ public class QueryProcessor {
         try {
             Projection projection = table.projectionToRead(columns);
             List<Record> records = scanFile(table, projection, columns);
-
-            // Update table usage
-            if (table.used(columns)) {
-                updateTable(table);
-            }
+            checkUpdate(table, columns, null);
 
             return records;
         } finally {
@@ -37,7 +33,7 @@ public class QueryProcessor {
 
         // Open appropriate file and save its column names
         File file = projection.getFile();
-        List<String> projectionColumns = new ArrayList<String>(projection.getColumns());
+        List<String> projectionColumns = new ArrayList<>(projection.getColumns());
 
         // Iterate through file and save columns in the values map
         List<String> splitLine;
@@ -64,11 +60,7 @@ public class QueryProcessor {
         try {
             Projection projection = table.projectionToRead(columns);
             Record record = findRecord(table, id, projection, columns);
-
-            // Update table usage
-            if (table.used(columns)) {
-                updateTable(table);
-            }
+            checkUpdate(table, columns, null);
 
             return record;
         } finally {
@@ -116,10 +108,11 @@ public class QueryProcessor {
                 try (
                     Writer pOut = new BufferedWriter(new FileWriter(projection.getFile(), true));
                 ) {
-                    pOut.write(createRow(id, new ArrayList<String>(projection.getColumns()), vals)+"\n");
+                    pOut.write(createRow(id, new ArrayList<>(projection.getColumns()), vals)+"\n");
                 }
             }
             table.dump();
+            checkUpdate(table, null, projections);
             return true;
         } finally {
             table.writeLock().unlock();
@@ -136,11 +129,27 @@ public class QueryProcessor {
         return CSV.join(relevantVals, ",");
     }
 
-    private void updateTable(Table table) {
+    private void checkUpdate(Table table, List<String> columns, List<Projection> projections) {
 
-        synchronized (updateQueue) {
-            updateQueue.add(table);
-            updateQueue.notifyAll();
+        // Check for creating projections
+        if (columns != null) {
+            addUpdate(table.wanted(columns));
+        }
+        // Check for deleting columns
+        if (projections != null) {
+            for (Projection proj : projections) {
+                addUpdate(table.wrote(proj));
+            }
+        }
+    }
+
+    private void addUpdate(Update update) {
+
+        if (update != null) {
+            synchronized (updateQueue) {
+                updateQueue.add(update);
+                updateQueue.notifyAll();
+            }
         }
     }
 }

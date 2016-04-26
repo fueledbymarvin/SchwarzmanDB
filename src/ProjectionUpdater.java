@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
@@ -7,11 +8,11 @@ import java.util.Queue;
  */
 public class ProjectionUpdater extends Thread {
 
-    private Queue<Table> updateQueue;
+    private Queue<Update> updateQueue;
     private QueryProcessor queryProcessor;
     private boolean shutdown;
 
-    public ProjectionUpdater(Queue<Table> updateQueue, QueryProcessor queryProcessor) {
+    public ProjectionUpdater(Queue<Update> updateQueue, QueryProcessor queryProcessor) {
 
         this.updateQueue = updateQueue;
         this.queryProcessor = queryProcessor;
@@ -22,7 +23,7 @@ public class ProjectionUpdater extends Thread {
     public void run() {
 
         while (true) {
-            Table table;
+            Update update;
             synchronized (updateQueue) {
                 // Wait if the queue is empty
                 while (updateQueue.isEmpty()) {
@@ -39,33 +40,48 @@ public class ProjectionUpdater extends Thread {
                         System.err.println("Interrupted: " + e.toString());
                     }
                 }
-                table = updateQueue.remove();
+                update = updateQueue.remove();
             }
 
-            table.readLock().lock();
-            try {
-                // Read all records
-                List<String> cols = table.getColumns();
-                List<Record> records = queryProcessor.scan(table, cols);
+            Table table = update.getTable();
+            Projection proj = update.getProjection();
+            switch (update.getAction()) {
+                case CREATE:
+                    table.readLock().lock();
+                    try {
+                        // Read all records
+                        List<String> cols = table.getColumns();
+                        List<Record> records = queryProcessor.scan(table, cols);
 
-                Queue<List<String>> toCreate = table.getToCreate();
-                List<String> projCols;
-                while ((projCols = toCreate.poll()) != null) {
-                    // Write projection
-                    Projection proj = table.createProjectionFile(projCols);
-                    try (
-                            Writer out = new BufferedWriter(new FileWriter(proj.getFile(), true))
-                    ) {
-                        for (Record r : records) {
-                            out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
+                        // Write new projection
+                        File file = table.createProjectionFile();
+                        List<String> projCols = new ArrayList<>(proj.getColumns());
+                        try (
+                                Writer out = new BufferedWriter(new FileWriter(file, true))
+                        ) {
+                            for (Record r : records) {
+                                out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
+                            }
                         }
+                        proj.setFile(file);
+                    } catch (IOException e) {
+                        System.err.println("Could not update: " + e.toString());
+                    } finally {
+                        table.readLock().unlock();
                     }
-                }
-
-            } catch (IOException e) {
-                System.err.println("Could not update: " + e.toString());
-            } finally {
-                table.readLock().unlock();
+                    break;
+                case DESTROY:
+                    table.writeLock().lock();
+                    try {
+                        // Delete projection file
+                        if (!proj.getFile().delete()) {
+                            System.err.println("Could not delete file: " + proj.getFile().getName());
+                        }
+                        proj.setFile(null);
+                    } finally {
+                        table.writeLock().unlock();
+                    }
+                    break;
             }
 
             // Update table info
@@ -78,6 +94,7 @@ public class ProjectionUpdater extends Thread {
     }
 
     synchronized public void shutdown() {
+
         shutdown = true;
         synchronized (updateQueue) {
             updateQueue.notifyAll();

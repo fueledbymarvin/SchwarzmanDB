@@ -9,7 +9,7 @@ public class TransactionTests {
 
 	public static void main(String args[]) throws IOException {
 
-		Queue<Table> updateQueue = new LinkedList<>();
+		Queue<Update> updateQueue = new LinkedList<>();
         QueryProcessor qp = new QueryProcessor(updateQueue);
         ProjectionUpdater updater = new ProjectionUpdater(updateQueue, qp);
         updater.start();

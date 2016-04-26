@@ -16,11 +16,7 @@ public class Table {
     private File tableInfo;
     private String name;
     private int nextId;
-    private int queries; // number of queries since last measurement
-    private int period; // number of queries to process before update
-    private double freshness; // proportion of overall usage that the latest measurement counts for
-    private double threshold;
-    private Queue<List<String>> toCreate;
+    private Config config;
     private Map<String, Projection> projections; // set of all projections sorted by size ascending
     private List<String> columns;
     private ReadWriteLock rwLock;
@@ -48,11 +44,7 @@ public class Table {
             line = forceReadLine(in);
             int nextId = Integer.parseInt(line);
             line = forceReadLine(in);
-            int period = Integer.parseInt(line);
-            line = forceReadLine(in);
-            double freshness = Double.parseDouble(line);
-            line = forceReadLine(in);
-            double threshold = Double.parseDouble(line);
+            Config config = new Config(line);
             line = forceReadLine(in);
             List<String> columns = CSV.split(line, ",");
 
@@ -63,18 +55,18 @@ public class Table {
                 line = forceReadLine(in);
                 List<String> projInfo = CSV.split(line, ",");
                 Projection proj;
-                if (projInfo.size() == 1) {
-                    proj = new Projection(key, Double.parseDouble(projInfo.get(0)));
-                } else if (projInfo.size() == 2) {
-                    File projFile = Paths.get(dataPath.toString(), projInfo.get(1)).toFile();
-                    proj = new Projection(key, Double.parseDouble(projInfo.get(0)), projFile);
+                if (projInfo.size() == 2) {
+                    proj = new Projection(key, Double.parseDouble(projInfo.get(0)), Double.parseDouble(projInfo.get(1)), config);
+                } else if (projInfo.size() == 3) {
+                    File projFile = Paths.get(dataPath.toString(), projInfo.get(2)).toFile();
+                    proj = new Projection(key, Double.parseDouble(projInfo.get(0)), Double.parseDouble(projInfo.get(1)), config, projFile);
                 } else {
                     throw new IllegalArgumentException("Projection info not formatted properly");
                 }
                 projections.put(key, proj);
             }
 
-            return new Table(dataPath, name, columns, nextId, period, freshness, threshold, projections, projectionsEnabled);
+            return new Table(dataPath, name, columns, nextId, config, projections, projectionsEnabled);
         }
     }
 
@@ -88,63 +80,31 @@ public class Table {
     }
 
     // brand new table
-    public Table(Path dataPath, String name, List<String> columns, int period, double freshness, double threshold, boolean projectionsEnabled) throws IOException {
+    public Table(Path dataPath, String name, List<String> columns, Config config, boolean projectionsEnabled) throws IOException {
 
-        this(dataPath, name, columns, 1, period, freshness, threshold, newSortedProjMap(), projectionsEnabled);
+        this(dataPath, name, columns, 1, config, newSortedProjMap(), projectionsEnabled);
         String key = getKey(columns);
-        projections.put(key, new Projection(key, 0));
-        createProjectionFile(columns);
+        Projection proj = new Projection(key, 0, 0, config);
+        projections.put(key, proj);
+        proj.setFile(createProjectionFile());
     }
 
-    private Table(Path dataPath, String name, List<String> columns, int nextId, int period, double freshness, double threshold, Map<String, Projection> projections, boolean projectionsEnabled) {
+    private Table(Path dataPath, String name, List<String> columns, int nextId, Config config, Map<String, Projection> projections, boolean projectionsEnabled) {
 
         this.dataPath = dataPath;
         this.name = name;
         this.columns = columns;
         this.nextId = nextId;
-        this.period = period;
-        this.freshness = freshness;
-        this.threshold = threshold;
+        this.config = config;
         this.projections = projections;
         this.projectionsEnabled = projectionsEnabled;
         tableInfo = Paths.get(dataPath.toString(), name).toFile();
-        queries = 0;
-        toCreate = new LinkedList<>();
         rwLock = new ReentrantReadWriteLock();
     }
 
-    public boolean used(List<String> columns) {
+    public File createProjectionFile() throws IOException {
 
-        String key = getKey(columns);
-        // Update usage
-        if (!projections.containsKey(key)) {
-            projections.put(key, new Projection(key, 0));
-        }
-        Projection proj = projections.get(key);
-        proj.increment();
-
-        queries++;
-        // Check if need to update column locations
-        if (queries == period) {
-            queries = 0;
-            for (Map.Entry<String, Projection> entry : projections.entrySet()) {
-                Projection p = entry.getValue();
-                p.update(freshness);
-                if (!p.hasFile() && p.getUsage() / period > threshold) {
-                    toCreate.add(new ArrayList<>(p.getColumns()));
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    public Projection createProjectionFile(List<String> cols) throws IOException {
-
-        Projection proj = projections.get(getKey(cols));
-        File file = Files.createTempFile(dataPath, name, ".proj").toFile();
-        proj.setFile(file);
-        return proj;
+        return Files.createTempFile(dataPath, name, ".proj").toFile();
     }
 
     public Projection projectionToRead(List<String> cols) {
@@ -174,6 +134,33 @@ public class Table {
         return res;
     }
 
+    public Update wanted(List<String> cols) {
+
+        // Add set of columns to possible projections
+        String key = getKey(cols);
+        if (!projections.containsKey(key)) {
+            projections.put(key, new Projection(key, 0, 0, config));
+        }
+        Projection proj = projections.get(key);
+
+        // Check if should create a new projection for this set of columns
+        Update.Action action = proj.read(columns.size(), nextId - 1, colDiff(cols));
+        if (action != null) {
+            return new Update(action, this, proj);
+        }
+        return null;
+    }
+
+    public Update wrote(Projection proj) {
+
+        List<String> cols = new ArrayList<>(proj.getColumns());
+        Update.Action action = proj.wrote(columns.size(), nextId - 1, colDiff(cols));
+        if (action != null) {
+            return new Update(action, this, proj);
+        }
+        return null;
+    }
+
     public int getNextId() {
         return nextId;
     }
@@ -194,10 +181,6 @@ public class Table {
         return rwLock.writeLock();
     }
 
-    public Queue<List<String>> getToCreate() {
-        return toCreate;
-    }
-
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
@@ -205,11 +188,7 @@ public class Table {
         sb.append("\n");
         sb.append(nextId);
         sb.append("\n");
-        sb.append(period);
-        sb.append("\n");
-        sb.append(freshness);
-        sb.append("\n");
-        sb.append(threshold);
+        sb.append(config);
         sb.append("\n");
         sb.append(getKey(columns));
         sb.append("\n");
@@ -232,5 +211,10 @@ public class Table {
         // Get unique key
         Collections.sort(columns);
         return CSV.join(columns, ",");
+    }
+
+    private int colDiff(List<String> cols) {
+
+        return projectionToRead(cols).getColumns().size() - cols.size();
     }
 }
