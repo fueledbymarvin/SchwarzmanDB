@@ -101,15 +101,18 @@ public class QueryProcessor {
         try {
             Map<String, String> vals = record.getValues();
             List<String> cols = record.getCols();
-            int id = table.getNextId();
+            record.setId(table.getNextId());
             table.incrementNextId();
             List<Projection> projections = table.projectionsToWrite(cols);
             for (Projection projection : projections) {
                 try (
                     Writer pOut = new BufferedWriter(new FileWriter(projection.getFile(), true));
                 ) {
-                    pOut.write(createRow(id, new ArrayList<>(projection.getColumns()), vals)+"\n");
+                    pOut.write(createRow(record.getId(), new ArrayList<>(projection.getColumns()), vals)+"\n");
                 }
+            }
+            if (table.isUpdating()) {
+                table.addUpdated(record);
             }
             table.dump();
             checkUpdate(table, null, projections);

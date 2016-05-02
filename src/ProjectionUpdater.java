@@ -51,12 +51,17 @@ public class ProjectionUpdater extends Thread {
                         continue;
                     }
                     Debug.DEBUG("Creating projection: " + proj.getColumns());
+                    // Set updating flag to true
                     table.readLock().lock();
+                    try {
+                        table.setUpdating(true);
+                    } finally {
+                        table.readLock().unlock();
+                    }
                     try {
                         // Read all records
                         List<String> cols = table.getColumns();
                         List<Record> records = queryProcessor.scan(table, cols);
-
                         // Write new projection
                         File file = table.createProjectionFile();
                         List<String> projCols = new ArrayList<>(proj.getColumns());
@@ -66,24 +71,41 @@ public class ProjectionUpdater extends Thread {
                             for (Record r : records) {
                                 out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
                             }
+                            // Store last written so know which new records were added after the scan
+                            int lastId = records.get(records.size() - 1).getId();
+                            // Write additional records
+                            table.readLock().lock();
+                            try {
+                                List<Record> newRecords = table.getUpdated();
+                                for (Record r : newRecords) {
+                                    if (r.getId() > lastId) {
+                                        out.write(queryProcessor.createRow(r.getId(), projCols, r.getValues()) + "\n");
+                                    }
+                                }
+                                proj.setFile(file);
+                                table.resetUpdated();
+                                table.setUpdating(false);
+                            } finally {
+                                table.readLock().unlock();
+                            }
                         }
-                        proj.setFile(file);
                     } catch (IOException e) {
                         System.err.println("Could not update: " + e.toString());
-                    } finally {
-                        table.readLock().unlock();
+                        return;
                     }
                     break;
                 case DESTROY:
+                    File file;
                     table.writeLock().lock();
                     try {
-                        // Delete projection file
-                        if (!proj.getFile().delete()) {
-                            System.err.println("Could not delete file: " + proj.getFile().getName());
-                        }
+                        // Remove reference to projection file
+                        file = proj.getFile();
                         proj.setFile(null);
                     } finally {
                         table.writeLock().unlock();
+                    }
+                    if (!file.delete()) {
+                        System.err.println("Could not delete file: " + proj.getFile().getName());
                     }
                     break;
             }

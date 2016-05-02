@@ -20,7 +20,8 @@ public class Table {
     private Map<String, Projection> projections; // set of all projections sorted by size ascending
     private List<String> columns;
     private ReadWriteLock rwLock;
-    private boolean projectionsEnabled;
+    private boolean projectionsEnabled, updating;
+    private List<Record> updated;
 
     private static Map<String, Projection> newSortedProjMap() {
 
@@ -100,6 +101,8 @@ public class Table {
         this.projectionsEnabled = projectionsEnabled;
         tableInfo = Paths.get(dataPath.toString(), name).toFile();
         rwLock = new ReentrantReadWriteLock();
+        updating = false;
+        updated = new ArrayList<>();
     }
 
     public File createProjectionFile() throws IOException {
@@ -187,6 +190,26 @@ public class Table {
 
     public Lock writeLock() {
         return rwLock.writeLock();
+    }
+
+    public boolean isUpdating() {
+        return updating;
+    }
+
+    public void setUpdating(boolean updating) {
+        this.updating = updating;
+    }
+
+    public List<Record> getUpdated() {
+        return updated;
+    }
+
+    public void addUpdated(Record newRecord) {
+        updated.add(newRecord);
+    }
+
+    public void resetUpdated() {
+        updated = new ArrayList<>();
     }
 
     public String toString() {

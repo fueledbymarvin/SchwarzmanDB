@@ -20,10 +20,10 @@ public class TransactionTests {
 		int recordLength = 100;
 
 		// Create and setup new table
-		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
-//		deleteDirectory(new File("/home/marvin/Downloads/test"));
-//		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
+//		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+//		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+		deleteDirectory(new File("/home/marvin/Downloads/test"));
+		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
 		for (int i = 0; i < numCols; i++){
 			columns.add("Column " + i);
@@ -72,39 +72,39 @@ public class TransactionTests {
 		// will result in new projections being created. The goal is to see performance of differently-sized projections
 		// and when, in the current system, it doesn't make sense to create one.
 		double[] prob3 = {10, 10, 1, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test3 = testFunction(10, 2, numRecords, 1000, prob3, table, qp, password);
+		TransactionTestResult test3 = testFunction(10, 2, numRecords, 1000, prob3, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test3.getTime());
 		System.out.println("Throughput: " + test3.getThroughput());
 		double[] prob4 = {10, 10, 1, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test4 = testFunction(10, 2, numRecords, 1000, prob4, table, qp, password);
+		TransactionTestResult test4 = testFunction(10, 2, numRecords, 1000, prob4, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test4.getTime());
 		System.out.println("Throughput: " + test4.getThroughput());
 		double[] prob5 = {10, 10, 10, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test5 = testFunction(10, 3, numRecords, 1000, prob5, table, qp, password);
+		TransactionTestResult test5 = testFunction(10, 3, numRecords, 1000, prob5, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test5.getTime());
 		System.out.println("Throughput: " + test5.getThroughput());
 		double[] prob6 = {10, 10, 10, 10, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test5 = testFunction(10, 4, numRecords, 1000, prob6, table, qp, password);
+		TransactionTestResult test6 = testFunction(10, 4, numRecords, 1000, prob6, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test6.getTime());
 		System.out.println("Throughput: " + test6.getThroughput());
 		double[] prob7 = {10, 10, 10, 10, 10, 1, 1, 1, 1, 1};
-		TransactionTestResult test7 = testFunction(10, 5, numRecords, 1000, prob7, table, qp, password);
+		TransactionTestResult test7 = testFunction(10, 5, numRecords, 1000, prob7, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test7.getTime());
 		System.out.println("Throughput: " + test7.getThroughput());
 		double[] prob8 = {10, 10, 10, 10, 10, 10, 1, 1, 1, 1};
-		TransactionTestResult test8 = testFunction(10, 6, numRecords, 1000, prob8, table, qp, password);
+		TransactionTestResult test8 = testFunction(10, 6, numRecords, 1000, prob8, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test8.getTime());
 		System.out.println("Throughput: " + test8.getThroughput());
 		double[] prob9 = {10, 10, 10, 10, 10, 10, 10, 1, 1, 1};
-		TransactionTestResult test9 = testFunction(10, 7, numRecords, 1000, prob9, table, qp, password);
+		TransactionTestResult test9 = testFunction(10, 7, numRecords, 1000, prob9, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test9.getTime());
 		System.out.println("Throughput: " + test9.getThroughput());
 		double[] prob10 = {10, 10, 10, 10, 10, 10, 10, 10, 1, 1};
-		TransactionTestResult test10 = testFunction(10, 8, numRecords, 1000, prob10, table, qp, password);
+		TransactionTestResult test10 = testFunction(10, 8, numRecords, 1000, prob10, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test10.getTime());
 		System.out.println("Throughput: " + test10.getThroughput());
 		double[] prob11 = {10, 10, 10, 10, 10, 10, 10, 10, 10, 1};
-		TransactionTestResult test11 = testFunction(10, 9, numRecords, 1000, prob11, table, qp, password);
+		TransactionTestResult test11 = testFunction(10, 9, numRecords, 1000, prob11, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test11.getTime());
 		System.out.println("Throughput: " + test11.getThroughput());
 
