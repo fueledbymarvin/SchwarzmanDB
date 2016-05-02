@@ -20,10 +20,10 @@ public class TransactionTests {
 		int recordLength = 100;
 
 		// Create and setup new table
-//		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-//		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
-		deleteDirectory(new File("/home/marvin/Downloads/test"));
-		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
+		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+//		deleteDirectory(new File("/home/marvin/Downloads/test"));
+//		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
 		for (int i = 0; i < numCols; i++){
 			columns.add("Column " + i);
@@ -68,48 +68,75 @@ public class TransactionTests {
 			System.out.println(test2.getThroughput().get(i));
 		}
 
-		// Test 2 -- Transaction 1 accesses a increasingly larger group of columns 10 times more than the others. This
-		// will result in new projections being created. The goal is to see performance of differently-sized projections
-		// and when, in the current system, it doesn't make sense to create one.
-		double[] prob3 = {10, 10, 1, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test3 = testFunction(10, 2, numRecords, 1000, prob3, hybrid, qp, password);
+		// Test 2 -- Real world simulation
+		List<List<String>> cols = new ArrayList<>();
+		cols.add(Arrays.asList("Column 0", "Column 1"));
+		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3"));
+		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3", "Column 4", "Column 5", "Column 6", "Column 7", "Column 8", "Column 9"));
+		double[] probGroup = {0.8, 0.1, 0.1};
+		System.out.println("Running hybrid");
+		TransactionTestResult test3 = testGroupFunction(cols, numRecords, 5000, probGroup, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test3.getTime());
 		System.out.println("Throughput: " + test3.getThroughput());
-		double[] prob4 = {10, 10, 1, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test4 = testFunction(10, 2, numRecords, 1000, prob4, hybrid, qp, password);
+		for (int i = 0; i < 50; i++) {
+			System.out.println(test3.getThroughput().get(i));
+		}
+		System.out.println("Running row");
+		TransactionTestResult test4 = testGroupFunction(cols, numRecords, 5000, probGroup, row, qp, password);
 		System.out.println("The Transaction Time was: " + test4.getTime());
 		System.out.println("Throughput: " + test4.getThroughput());
-		double[] prob5 = {10, 10, 10, 1, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test5 = testFunction(10, 3, numRecords, 1000, prob5, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test5.getTime());
-		System.out.println("Throughput: " + test5.getThroughput());
-		double[] prob6 = {10, 10, 10, 10, 1, 1, 1, 1, 1, 1};
-		TransactionTestResult test6 = testFunction(10, 4, numRecords, 1000, prob6, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test6.getTime());
-		System.out.println("Throughput: " + test6.getThroughput());
-		double[] prob7 = {10, 10, 10, 10, 10, 1, 1, 1, 1, 1};
-		TransactionTestResult test7 = testFunction(10, 5, numRecords, 1000, prob7, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test7.getTime());
-		System.out.println("Throughput: " + test7.getThroughput());
-		double[] prob8 = {10, 10, 10, 10, 10, 10, 1, 1, 1, 1};
-		TransactionTestResult test8 = testFunction(10, 6, numRecords, 1000, prob8, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test8.getTime());
-		System.out.println("Throughput: " + test8.getThroughput());
-		double[] prob9 = {10, 10, 10, 10, 10, 10, 10, 1, 1, 1};
-		TransactionTestResult test9 = testFunction(10, 7, numRecords, 1000, prob9, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test9.getTime());
-		System.out.println("Throughput: " + test9.getThroughput());
-		double[] prob10 = {10, 10, 10, 10, 10, 10, 10, 10, 1, 1};
-		TransactionTestResult test10 = testFunction(10, 8, numRecords, 1000, prob10, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test10.getTime());
-		System.out.println("Throughput: " + test10.getThroughput());
-		double[] prob11 = {10, 10, 10, 10, 10, 10, 10, 10, 10, 1};
-		TransactionTestResult test11 = testFunction(10, 9, numRecords, 1000, prob11, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test11.getTime());
-		System.out.println("Throughput: " + test11.getThroughput());
+		for (int i = 0; i < 50; i++) {
+			System.out.println(test4.getThroughput().get(i));
+		}
 
 		updater.shutdown();
 		return;
+	}
+
+	public static TransactionTestResult testGroupFunction(List<List<String>> cols, int numRecords, int numReads, double[] probabilities, Table table, QueryProcessor qp, String password) throws IOException {
+
+		long startTime = 0;
+		long estimatedTime = 0;
+		int numCols = cols.size();
+		ThroughputCounter throughput = new ThroughputCounter();
+		throughput.start();
+
+		// check if number of column groups is equal to length of the probabilities input
+		if (probabilities.length != numCols) {
+			System.out.println("Length of probabilities input does not match number of column groups.");
+			return new TransactionTestResult();
+		}
+
+		// normalize the array of probabilities
+		double probabilitySum = 0;
+		int i;
+		for (i = 0; i < probabilities.length; i++) {
+			probabilitySum += probabilities[i];
+		}
+		double temp; //probably don't need this
+		for (i = 0; i < probabilities.length; i++) {
+			temp = probabilities[i] / probabilitySum;
+			probabilities[i] = temp;
+		}
+
+		Random random = new Random();
+		int idToSearch;
+		int colGroupToRead;
+
+		for (i = 0; i < numReads; i++) {
+			colGroupToRead = pickWeightedColumn(numCols, probabilities);
+			idToSearch = random.nextInt(numRecords) + 1;
+			startTime = System.nanoTime();
+			qp.read(table, idToSearch, cols.get(colGroupToRead));
+			throughput.increment();
+			estimatedTime += System.nanoTime() - startTime;
+			if (password.length() > 0) {
+				// ClearCache.clear(password);
+			}
+		}
+
+		List<Integer> throughput_results = throughput.stopAndReturnThroughput();
+		return new TransactionTestResult(throughput_results, estimatedTime);
 	}
 
 	// More complicated script for testing transactions
