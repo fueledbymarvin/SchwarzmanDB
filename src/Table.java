@@ -124,11 +124,13 @@ public class Table {
 
     public List<Projection> projectionsToWrite(List<String> cols) {
 
+        // Returns all projections it would write even if the projection doesn't exist
+        // This allows tracking of what would have had to be written if it did exist
         List<Projection> res = new ArrayList<>();
         for (Projection proj : projections.values()) {
             Set<String> projCols = proj.getColumns();
             for (String col : cols) {
-                if (proj.hasFile() && projCols.contains(col)) {
+                if (projCols.contains(col)) {
                     res.add(proj);
                     break;
                 }

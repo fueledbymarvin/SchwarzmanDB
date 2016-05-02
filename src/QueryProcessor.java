@@ -105,10 +105,12 @@ public class QueryProcessor {
             table.incrementNextId();
             List<Projection> projections = table.projectionsToWrite(cols);
             for (Projection projection : projections) {
-                try (
-                    Writer pOut = new BufferedWriter(new FileWriter(projection.getFile(), true));
-                ) {
-                    pOut.write(createRow(record.getId(), new ArrayList<>(projection.getColumns()), vals)+"\n");
+                if (projection.hasFile()) {
+                    try (
+                            Writer pOut = new BufferedWriter(new FileWriter(projection.getFile(), true));
+                    ) {
+                        pOut.write(createRow(record.getId(), new ArrayList<>(projection.getColumns()), vals)+"\n");
+                    }
                 }
             }
             if (table.isUpdating()) {
