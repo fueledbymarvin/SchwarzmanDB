@@ -72,17 +72,17 @@ public class Metadata {
         return tables.get(table);
     }
 
-    public void createTable(String name, List<String> columns) throws IOException {
+    public Table createTable(String name, List<String> columns) throws IOException {
 
-        createTable(name, columns, config, true);
+        return createTable(name, columns, config, true);
     }
 
-    public void createTable(String name, List<String> columns, boolean projectionsEnabled) throws IOException {
+    public Table createTable(String name, List<String> columns, boolean projectionsEnabled) throws IOException {
 
-        createTable(name, columns, config, projectionsEnabled);
+        return createTable(name, columns, config, projectionsEnabled);
     }
     
-    public void createTable(String name, List<String> columns, Config config, boolean projectionsEnabled) throws IOException {
+    public Table createTable(String name, List<String> columns, Config config, boolean projectionsEnabled) throws IOException {
 
         Table table = new Table(dataPath, name, columns, config, projectionsEnabled);
         table.dump();
@@ -90,5 +90,6 @@ public class Metadata {
         try (Writer out = new BufferedWriter(new FileWriter(metadata, true))) {
             out.write(name+"\n");
         }
+        return table;
     }
 }

@@ -136,6 +136,10 @@ public class Table {
 
     public Update wanted(List<String> cols) {
 
+        if (!projectionsEnabled) {
+            return null;
+        }
+
         // Add set of columns to possible projections
         String key = getKey(cols);
         if (!projections.containsKey(key)) {
@@ -152,6 +156,10 @@ public class Table {
     }
 
     public Update wrote(Projection proj) {
+
+        if (!projectionsEnabled) {
+            return null;
+        }
 
         List<String> cols = new ArrayList<>(proj.getColumns());
         Update.Action action = proj.wrote(columns.size(), nextId - 1, colDiff(cols));

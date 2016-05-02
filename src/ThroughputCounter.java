@@ -12,7 +12,7 @@ public class ThroughputCounter extends Thread {
 
     public ThroughputCounter() {
 
-        this.throughput = new ArrayList<Integer>();
+        this.throughput = new ArrayList<>();
         this.running = false;
         this.current = 0;
     }
@@ -22,7 +22,7 @@ public class ThroughputCounter extends Thread {
 
         while (running) {
             try {
-                sleep(1000);
+                sleep(200);
             } catch (InterruptedException e) {}
             throughput.add(current);
             current = 0;

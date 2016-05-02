@@ -28,13 +28,15 @@ public class TransactionTests {
 		for (int i = 0; i < numCols; i++){
 			columns.add("Column " + i);
 		}
-		metadata.createTable("Table", columns);
-		Table table = metadata.get("Table");
+
+		Table hybrid = metadata.createTable("Hybrid", columns);
+		Table row = metadata.createTable("Row", columns, false);
 
 		// Insert Random Records
 		System.out.println("Writing random records...");
 		long startTime = System.nanoTime();
-		tablePopulator(table, qp, recordLength, numRecords);
+		tablePopulator(hybrid, qp, recordLength, numRecords);
+		tablePopulator(row, qp, recordLength, numRecords);
 		long estimatedTime = System.nanoTime() - startTime;
 		System.out.println("Total Elapsed Time was: " + estimatedTime + "\n");
 
@@ -50,14 +52,21 @@ public class TransactionTests {
 		// between the other 9 columns. This will result in a new projection that will eventually increase throughput.
 		// Transaction 2 accesses every column at an equal probability, so it doesn't have the same benefits of
 		// Transaction 1.
-		double[] prob1 = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
-		TransactionTestResult test1 = testFunction(10, 1, numRecords, 1000, prob1, table, qp, password);
+		double[] prob = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
+		System.out.println("Running hybrid");
+		TransactionTestResult test1 = testFunction(10, 1, numRecords, 5000, prob, hybrid, qp, password);
 		System.out.println("The Transaction Time was: " + test1.getTime());
 		System.out.println("Throughput: " + test1.getThroughput());
-		double[] prob2 = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
-		TransactionTestResult test2 = testFunction(10, 1, numRecords, 1000, prob2, table, qp, password);
+		for (int i = 0; i < 50; i++) {
+			System.out.println(test1.getThroughput().get(i));
+		}
+		System.out.println("Running row");
+		TransactionTestResult test2 = testFunction(10, 1, numRecords, 5000, prob, row, qp, password);
 		System.out.println("The Transaction Time was: " + test2.getTime());
 		System.out.println("Throughput: " + test2.getThroughput());
+		for (int i = 0; i < 50; i++) {
+			System.out.println(test2.getThroughput().get(i));
+		}
 
 		updater.shutdown();
 
