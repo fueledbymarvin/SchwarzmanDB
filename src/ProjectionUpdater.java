@@ -95,17 +95,20 @@ public class ProjectionUpdater extends Thread {
                     }
                     break;
                 case DESTROY:
-                    File file;
+                    if (!proj.hasFile()) {
+                        continue;
+                    }
+                    Debug.DEBUG("Deleting projection: " + proj.getColumns());
+                    File file = proj.getFile();
                     table.writeLock().lock();
                     try {
                         // Remove reference to projection file
-                        file = proj.getFile();
                         proj.setFile(null);
                     } finally {
                         table.writeLock().unlock();
                     }
                     if (!file.delete()) {
-                        System.err.println("Could not delete file: " + proj.getFile().getName());
+                        System.err.println("Could not delete file: " + file.getName());
                     }
                     break;
             }
