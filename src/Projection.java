@@ -29,33 +29,26 @@ public class Projection {
         this.file = file;
     }
 
-    public Update.Action read(int nCols, int nRecords, int colDiff) {
+    public boolean read() {
 
         readCount++;
-        return check(nCols, nRecords, colDiff);
+        return readCount + writeCount == config.getPeriod();
     }
 
-    public Update.Action wrote(int nCols, int nRecords, int colDiff) {
+    public boolean wrote() {
 
         writeCount++;
-        return check(nCols, nRecords, colDiff);
+        return readCount + writeCount == config.getPeriod();
     }
 
-    private Update.Action check(int nCols, int nRecords, int colDiff) {
+    public Update.Action check(int nRecords, int colDiff) {
 
         int period = config.getPeriod();
-        if (readCount + writeCount == period) {
-            double freshness = config.getFreshness();
-            readFreq = readFreq*(1-freshness) + freshness*readCount/period;
-            writeFreq = writeFreq*(1-freshness) + freshness*writeCount/period;
-            readCount = 0;
-            writeCount = 0;
-        }
-
-        // Don't update the default projection
-        if (cols.size() == nCols) {
-            return null;
-        }
+        double freshness = config.getFreshness();
+        readFreq = readFreq*(1-freshness) + freshness*readCount/period;
+        writeFreq = writeFreq*(1-freshness) + freshness*writeCount/period;
+        readCount = 0;
+        writeCount = 0;
 
         // TODO BETTER FORMULA
         double writeCost = writeFreq;

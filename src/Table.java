@@ -152,10 +152,17 @@ public class Table {
         }
         Projection proj = projections.get(key);
 
+        // Don't update the default projection
+        if (proj.getColumns().size() == columns.size()) {
+            return null;
+        }
+
         // Check if should create a new projection for this set of columns
-        Update.Action action = proj.read(columns.size(), nextId - 1, colDiff(cols));
-        if (action != null) {
-            return new Update(action, this, proj);
+        if (proj.read()) {
+            Update.Action action = proj.check(nextId - 1, colDiff(proj));
+            if (action != null) {
+                return new Update(action, this, proj);
+            }
         }
         return null;
     }
@@ -166,10 +173,16 @@ public class Table {
             return null;
         }
 
-        List<String> cols = new ArrayList<>(proj.getColumns());
-        Update.Action action = proj.wrote(columns.size(), nextId - 1, colDiff(cols));
-        if (action != null) {
-            return new Update(action, this, proj);
+        // Don't update the default projection
+        if (proj.getColumns().size() == columns.size()) {
+            return null;
+        }
+
+        if (proj.wrote()) {
+            Update.Action action = proj.check(nextId - 1, colDiff(proj));
+            if (action != null) {
+                return new Update(action, this, proj);
+            }
         }
         return null;
     }
@@ -246,8 +259,15 @@ public class Table {
         return CSV.join(columns, ",");
     }
 
-    private int colDiff(List<String> cols) {
+    private int colDiff(Projection proj) {
 
-        return projectionToRead(cols).getColumns().size() - cols.size();
+        for (Projection p : projections.values()) {
+            // Ordered by number of columns
+            // Returns smallest projection that contains all relevant columns that is not this one
+            if (p != proj && p.hasFile() && p.getColumns().containsAll(proj.getColumns())) {
+                return p.getColumns().size() - proj.getColumns().size();
+            }
+        }
+        throw new IllegalArgumentException("Nonexistent columns");
     }
 }
