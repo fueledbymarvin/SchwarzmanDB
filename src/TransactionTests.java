@@ -76,7 +76,7 @@ public class TransactionTests {
 		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3"));
 		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3", "Column 4", "Column 5", "Column 6", "Column 7", "Column 8", "Column 9"));
 		double[] probGroup = {0.8, 0.1, 0.1};
-//
+
 		System.out.println("Running hybrid");
 		TransactionTestResult test3 = testGroupFunction(cols, numRecords, 5000, probGroup, hybrid, qp, password);
 		System.out.println("The Time was: " + test3.getTime());
@@ -196,8 +196,6 @@ public class TransactionTests {
 		long estimatedTime = 0;
 		int numCols = cols.size();
 		int numColGroups = colGroups.size();
-		ThroughputCounter throughput = new ThroughputCounter();
-		throughput.start();
 
 		Table table;
 		if (hybrid) {
@@ -217,6 +215,9 @@ public class TransactionTests {
 		boolean isRead;
 		int colGroupToRead;
 		int i;
+		
+		ThroughputCounter throughput = new ThroughputCounter();
+		throughput.start();
 		for (i = 0; i < numTxns; i++) {
 			isRead = pickReadWrite(read, write);
 			if (isRead) {
