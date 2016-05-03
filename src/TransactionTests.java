@@ -20,10 +20,10 @@ public class TransactionTests {
 		int recordLength = 100;
 
 		// Create and setup new table
-		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
-//		deleteDirectory(new File("/home/marvin/Downloads/test"));
-//		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
+//		 deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+//		 Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+		deleteDirectory(new File("/home/marvin/Downloads/test"));
+		Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
 		List<String> columns = new ArrayList<>();
 		for (int i = 0; i < numCols; i++){
 			columns.add("Column " + i);
