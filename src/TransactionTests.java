@@ -20,10 +20,10 @@ public class TransactionTests {
         int recordLength = 100;
 
         // Create and setup new table
-        // deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-        // Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
-        deleteDirectory(new File("/home/accts/fjw22/test"));
-        Metadata metadata = new Metadata("/home/accts/fjw22", "test");
+        deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+        // deleteDirectory(new File("/home/accts/fjw22/test"));
+        // Metadata metadata = new Metadata("/home/accts/fjw22", "test");
         // deleteDirectory(new File("/home/marvin/Downloads/test"));
         // Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
         List<String> columns = new ArrayList<>();
@@ -31,16 +31,16 @@ public class TransactionTests {
             columns.add("Column " + i);
         }
 
-        // Table hybrid = metadata.createTable("Hybrid", columns);
-        // Table row = metadata.createTable("Row", columns, false);
+        Table hybrid = metadata.createTable("Hybrid", columns);
+        Table row = metadata.createTable("Row", columns, false);
 
         // // Insert Random Records
-        // System.out.println("Writing random records...");
-        // long startTime = System.nanoTime();
-        // tablePopulator(hybrid, qp, recordLength, numRecords);
-        // tablePopulator(row, qp, recordLength, numRecords);
-        // long estimatedTime = System.nanoTime() - startTime;
-        // System.out.println("Total Elapsed Time was: " + estimatedTime + "\n");
+        System.out.println("Writing random records...");
+        long startTime = System.nanoTime();
+        tablePopulator(hybrid, qp, recordLength, numRecords);
+        tablePopulator(row, qp, recordLength, numRecords);
+        long estimatedTime = System.nanoTime() - startTime;
+        System.out.println("Total Elapsed Time was: " + estimatedTime + "\n");
 
         // Obtain password for permissions to clear cache
         String password;
@@ -54,21 +54,21 @@ public class TransactionTests {
         // between the other 9 columns. This will result in a new projection that will eventually increase throughput.
         // Transaction 2 accesses every column at an equal probability, so it doesn't have the same benefits of
         // Transaction 1.
-        // double[] prob = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
-        // System.out.println("Running hybrid");
-        // TransactionTestResult test1 = testFunction(10, 1, numRecords, 5000, prob, hybrid, qp, password);
-        // System.out.println("The Time was: " + test1.getTime());
-        // System.out.println("Throughput: " + test1.getThroughput());
-        // for (int i = 0; i < 50; i++) {
-        //   System.out.println(test1.getThroughput().get(i));
-        // }
-        // System.out.println("Running row");
-        // TransactionTestResult test2 = testFunction(10, 1, numRecords, 5000, prob, row, qp, password);
-        // System.out.println("The Time was: " + test2.getTime());
-        // System.out.println("Throughput: " + test2.getThroughput());
-        // for (int i = 0; i < 50; i++) {
-        //   System.out.println(test2.getThroughput().get(i));
-        // }
+        double[] prob = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
+        System.out.println("Running hybrid");
+        TransactionTestResult test1 = testFunction(10, 1, numRecords, 5000, prob, hybrid, qp, password);
+        System.out.println("The Time was: " + test1.getTime());
+        System.out.println("Throughput: " + test1.getThroughput());
+        for (int i = 0; i < 50; i++) {
+          System.out.println(test1.getThroughput().get(i));
+        }
+        System.out.println("Running row");
+        TransactionTestResult test2 = testFunction(10, 1, numRecords, 5000, prob, row, qp, password);
+        System.out.println("The Time was: " + test2.getTime());
+        System.out.println("Throughput: " + test2.getThroughput());
+        for (int i = 0; i < 50; i++) {
+          System.out.println(test2.getThroughput().get(i));
+        }
 
         // Test 2 -- Real world simulation
         List<List<String>> cols = new ArrayList<>();
@@ -77,82 +77,50 @@ public class TransactionTests {
         cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3", "Column 4", "Column 5", "Column 6", "Column 7", "Column 8", "Column 9"));
         double[] probGroup = {0.8, 0.1, 0.1};
 
-        // System.out.println("Running hybrid");
-        // TransactionTestResult test3 = testGroupFunction(cols, numRecords, 5000, probGroup, hybrid, qp, password);
-        // System.out.println("The Time was: " + test3.getTime());
-        // System.out.println("Throughput: " + test3.getThroughput());
-        // for (int i = 0; i < 50; i++) {
-        //   System.out.println(test3.getThroughput().get(i));
-        // }
-        // System.out.println("Running row");
-        // TransactionTestResult test4 = testGroupFunction(cols, numRecords, 5000, probGroup, row, qp, password);
-        // System.out.println("The Time was: " + test4.getTime());
-        // System.out.println("Throughput: " + test4.getThroughput());
-        // for (int i = 0; i < 50; i++) {
-        //   System.out.println(test4.getThroughput().get(i));
-        // }
+        System.out.println("Running hybrid");
+        TransactionTestResult test3 = testGroupFunction(cols, numRecords, 5000, probGroup, hybrid, qp, password);
+        System.out.println("The Time was: " + test3.getTime());
+        System.out.println("Throughput: " + test3.getThroughput());
+        for (int i = 0; i < 50; i++) {
+          System.out.println(test3.getThroughput().get(i));
+        }
+        System.out.println("Running row");
+        TransactionTestResult test4 = testGroupFunction(cols, numRecords, 5000, probGroup, row, qp, password);
+        System.out.println("The Time was: " + test4.getTime());
+        System.out.println("Throughput: " + test4.getThroughput());
+        for (int i = 0; i < 50; i++) {
+          System.out.println(test4.getThroughput().get(i));
+        }
 
         // Test 3 -- Real world simulation with writes
-        // 1. 80% writes 20% reads
-        System.out.println("Running hybrid");
-        TransactionTestResult testGroup1_h = testWorkloadFunction(true, columns, cols, 7500, 80, 20, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup1_h.getTime());
-        System.out.println("Throughput: " + testGroup1_h.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup1_h.getThroughput().get(i));
-        }
-        System.out.println("Running row");
-        TransactionTestResult testGroup1_r = testWorkloadFunction(false, columns, cols, 7500, 80, 20, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup1_r.getTime());
-        System.out.println("Throughput: " + testGroup1_r.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup1_r.getThroughput().get(i));
-        }
-        // 2. 60% writes 40% reads
-        System.out.println("Running hybrid");
-        TransactionTestResult testGroup2_h = testWorkloadFunction(true, columns, cols, 7500, 60, 40, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup2_h.getTime());
-        System.out.println("Throughput: " + testGroup2_h.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup2_h.getThroughput().get(i));
-        }
-        System.out.println("Running row");
-        TransactionTestResult testGroup2_r = testWorkloadFunction(false, columns, cols, 7500, 60, 40, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup2_r.getTime());
-        System.out.println("Throughput: " + testGroup2_r.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup2_r.getThroughput().get(i));
-        }
-        // 3. 40% writes 60% reads
-        System.out.println("Running hybrid");
-        TransactionTestResult testGroup3_h = testWorkloadFunction(true, columns, cols, 7500, 40, 60, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup3_h.getTime());
-        System.out.println("Throughput: " + testGroup3_h.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup3_h.getThroughput().get(i));
-        }
-        System.out.println("Running row");
-        TransactionTestResult testGroup3_r = testWorkloadFunction(false, columns, cols, 7500, 40, 60, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup3_r.getTime());
-        System.out.println("Throughput: " + testGroup3_r.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup3_r.getThroughput().get(i));
-        }
-        // 4. 20% writes 80% reads
-        System.out.println("Running hybrid");
-        TransactionTestResult testGroup4_h = testWorkloadFunction(true, columns, cols, 7500, 20, 80, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup4_h.getTime());
-        System.out.println("Throughput: " + testGroup4_h.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup4_h.getThroughput().get(i));
-        }
-        System.out.println("Running row");
-        TransactionTestResult testGroup4_r = testWorkloadFunction(false, columns, cols, 7500, 20, 80, probGroup, metadata, qp, password);
-        System.out.println("The Time was: " + testGroup4_r.getTime());
-        System.out.println("Throughput: " + testGroup4_r.getThroughput());
-        for (int i = 0; i < 50; i++) {
-            System.out.println(testGroup4_r.getThroughput().get(i));
-        }
+        //   1. 80% writes 20% reads
+		//   2. 60% writes 40% reads
+		//   3. 40% writes 60% reads
+		//   4. 20% writes 80% reads
+		List<double[]> read_write = new ArrayList<>();
+		read_write.add(new double[]{ 80, 20 });
+		read_write.add(new double[]{ 60, 40 });
+		read_write.add(new double[]{ 40, 60 });
+		read_write.add(new double[]{ 20, 80 });
+		for (int i = 0; i < 4; i++) {
+			double[] rw = read_write.get(i);
+
+			System.out.println("Running hybrid");
+			TransactionTestResult testGroup_h = testWorkloadFunction(true, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
+			System.out.println("The Time was: " + testGroup_h.getTime());
+			System.out.println("Throughput: " + testGroup_h.getThroughput());
+			for (int j = 0; j < 50; j++) {
+				System.out.println(testGroup_h.getThroughput().get(j));
+			}
+
+			System.out.println("Running row");
+			TransactionTestResult testGroup_r = testWorkloadFunction(false, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
+			System.out.println("The Time was: " + testGroup_r.getTime());
+			System.out.println("Throughput: " + testGroup_r.getThroughput());
+			for (int j = 0; j < 50; j++) {
+				System.out.println(testGroup_r.getThroughput().get(j));
+			}
+		}
 
         updater.shutdown();
         return;
