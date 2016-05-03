@@ -57,14 +57,14 @@ public class TransactionTests {
 		double[] prob = {0.91, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01};
 		System.out.println("Running hybrid");
 		TransactionTestResult test1 = testFunction(10, 1, numRecords, 5000, prob, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test1.getTime());
+		System.out.println("The Time was: " + test1.getTime());
 		System.out.println("Throughput: " + test1.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(test1.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult test2 = testFunction(10, 1, numRecords, 5000, prob, row, qp, password);
-		System.out.println("The Transaction Time was: " + test2.getTime());
+		System.out.println("The Time was: " + test2.getTime());
 		System.out.println("Throughput: " + test2.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(test2.getThroughput().get(i));
@@ -76,16 +76,17 @@ public class TransactionTests {
 		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3"));
 		cols.add(Arrays.asList("Column 0", "Column 1", "Column 2", "Column 3", "Column 4", "Column 5", "Column 6", "Column 7", "Column 8", "Column 9"));
 		double[] probGroup = {0.8, 0.1, 0.1};
+
 		System.out.println("Running hybrid");
 		TransactionTestResult test3 = testGroupFunction(cols, numRecords, 5000, probGroup, hybrid, qp, password);
-		System.out.println("The Transaction Time was: " + test3.getTime());
+		System.out.println("The Time was: " + test3.getTime());
 		System.out.println("Throughput: " + test3.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(test3.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult test4 = testGroupFunction(cols, numRecords, 5000, probGroup, row, qp, password);
-		System.out.println("The Transaction Time was: " + test4.getTime());
+		System.out.println("The Time was: " + test4.getTime());
 		System.out.println("Throughput: " + test4.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(test4.getThroughput().get(i));
@@ -95,14 +96,14 @@ public class TransactionTests {
 		// 0. 100% writes 0% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup0_h = testWorkloadFunction(true, columns, cols, 5000, 1.0, 0.0, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup0_h.getTime());
+		System.out.println("The Time was: " + testGroup0_h.getTime());
 		System.out.println("Throughput: " + testGroup0_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup0_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup0_r = testWorkloadFunction(false, columns, cols, 5000, 1.0, 0.0, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup0_r.getTime());
+		System.out.println("The Time was: " + testGroup0_r.getTime());
 		System.out.println("Throughput: " + testGroup0_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup0_r.getThroughput().get(i));
@@ -110,14 +111,14 @@ public class TransactionTests {
 		// 1. 80% writes 20% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup1_h = testWorkloadFunction(true, columns, cols, 5000, 0.8, 0.2, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup1_h.getTime());
+		System.out.println("The Time was: " + testGroup1_h.getTime());
 		System.out.println("Throughput: " + testGroup1_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup1_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup1_r = testWorkloadFunction(false, columns, cols, 5000, 0.8, 0.2, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup1_r.getTime());
+		System.out.println("The Time was: " + testGroup1_r.getTime());
 		System.out.println("Throughput: " + testGroup1_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup1_r.getThroughput().get(i));
@@ -125,14 +126,14 @@ public class TransactionTests {
 		// 2. 60% writes 40% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup2_h = testWorkloadFunction(true, columns, cols, 5000, 0.6, 0.4, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup2_h.getTime());
+		System.out.println("The Time was: " + testGroup2_h.getTime());
 		System.out.println("Throughput: " + testGroup2_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup2_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup2_r = testWorkloadFunction(false, columns, cols, 5000, 0.6, 0.4, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup2_r.getTime());
+		System.out.println("The Time was: " + testGroup2_r.getTime());
 		System.out.println("Throughput: " + testGroup2_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup2_r.getThroughput().get(i));
@@ -140,14 +141,14 @@ public class TransactionTests {
 		// 3. 40% writes 60% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup3_h = testWorkloadFunction(true, columns, cols, 5000, 0.4, 0.6, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup3_h.getTime());
+		System.out.println("The Time was: " + testGroup3_h.getTime());
 		System.out.println("Throughput: " + testGroup3_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup3_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup3_r = testWorkloadFunction(false, columns, cols, 5000, 0.4, 0.6, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup3_r.getTime());
+		System.out.println("The Time was: " + testGroup3_r.getTime());
 		System.out.println("Throughput: " + testGroup3_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup3_r.getThroughput().get(i));
@@ -155,14 +156,14 @@ public class TransactionTests {
 		// 4. 20% writes 80% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup4_h = testWorkloadFunction(true, columns, cols, 5000, 0.2, 0.8, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup4_h.getTime());
+		System.out.println("The Time was: " + testGroup4_h.getTime());
 		System.out.println("Throughput: " + testGroup4_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup4_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup4_r = testWorkloadFunction(false, columns, cols, 5000, 0.2, 0.8, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup4_r.getTime());
+		System.out.println("The Time was: " + testGroup4_r.getTime());
 		System.out.println("Throughput: " + testGroup4_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup4_r.getThroughput().get(i));
@@ -170,19 +171,18 @@ public class TransactionTests {
 		// 5. 0% writes 100% reads
 		System.out.println("Running hybrid");
 		TransactionTestResult testGroup5_h = testWorkloadFunction(true, columns, cols, 5000, 0.0, 1.0, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup5_h.getTime());
+		System.out.println("The Time was: " + testGroup5_h.getTime());
 		System.out.println("Throughput: " + testGroup5_h.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup5_h.getThroughput().get(i));
 		}
 		System.out.println("Running row");
 		TransactionTestResult testGroup5_r = testWorkloadFunction(false, columns, cols, 5000, 0.0, 1.0, prob, metadata, qp, password);
-		System.out.println("The Transaction Time was: " + testGroup5_r.getTime());
+		System.out.println("The Time was: " + testGroup5_r.getTime());
 		System.out.println("Throughput: " + testGroup5_r.getThroughput());
 		for (int i = 0; i < 50; i++) {
 			System.out.println(testGroup5_r.getThroughput().get(i));
 		}
-
 
 		updater.shutdown();
 		return;
