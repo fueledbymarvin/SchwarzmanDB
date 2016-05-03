@@ -239,6 +239,7 @@ public class TransactionTests {
 				qp.write(record);
 				throughput.increment();
 				estimatedTime += System.nanoTime() - startTime;
+				numRecords++;
 			}
 			if (password.length() > 0) {
 				// ClearCache.clear(password);
