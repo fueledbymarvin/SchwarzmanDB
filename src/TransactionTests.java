@@ -20,12 +20,12 @@ public class TransactionTests {
         int recordLength = 100;
 
         // Create and setup new table
-        deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
-        Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
+        // deleteDirectory(new File("/Users/frankjwu/Downloads/test"));
+        // Metadata metadata = new Metadata("/Users/frankjwu/Downloads/", "test");
         // deleteDirectory(new File("/home/accts/fjw22/test"));
         // Metadata metadata = new Metadata("/home/accts/fjw22", "test");
-        // deleteDirectory(new File("/home/marvin/Downloads/test"));
-        // Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
+        deleteDirectory(new File("/home/marvin/Downloads/test"));
+        Metadata metadata = new Metadata("/home/marvin/Downloads/", "test");
         List<String> columns = new ArrayList<>();
         for (int i = 0; i < numCols; i++){
             columns.add("Column " + i);
@@ -94,33 +94,32 @@ public class TransactionTests {
 
         // Test 3 -- Real world simulation with writes
         //   1. 80% writes 20% reads
-		//   2. 60% writes 40% reads
-		//   3. 40% writes 60% reads
-		//   4. 20% writes 80% reads
-		List<double[]> read_write = new ArrayList<>();
-		read_write.add(new double[]{ 80, 20 });
-		read_write.add(new double[]{ 60, 40 });
-		read_write.add(new double[]{ 40, 60 });
-		read_write.add(new double[]{ 20, 80 });
-		for (int i = 0; i < 4; i++) {
-			double[] rw = read_write.get(i);
+        //   2. 60% writes 40% reads
+        //   3. 40% writes 60% reads
+        //   4. 20% writes 80% reads
+        List<double[]> read_write = new ArrayList<>();
+        read_write.add(new double[]{ 80, 20 });
+        read_write.add(new double[]{ 60, 40 });
+        read_write.add(new double[]{ 40, 60 });
+        read_write.add(new double[]{ 20, 80 });
+        for (int i = 0; i < 4; i++) {
+            double[] rw = read_write.get(i);
 
-			System.out.println("Running hybrid");
-			TransactionTestResult testGroup_h = testWorkloadFunction(true, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
-			System.out.println("The Time was: " + testGroup_h.getTime());
-			System.out.println("Throughput: " + testGroup_h.getThroughput());
-			for (int j = 0; j < 50; j++) {
-				System.out.println(testGroup_h.getThroughput().get(j));
-			}
-
-			System.out.println("Running row");
-			TransactionTestResult testGroup_r = testWorkloadFunction(false, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
-			System.out.println("The Time was: " + testGroup_r.getTime());
-			System.out.println("Throughput: " + testGroup_r.getThroughput());
-			for (int j = 0; j < 50; j++) {
-				System.out.println(testGroup_r.getThroughput().get(j));
-			}
-		}
+            System.out.println("Running hybrid");
+            TransactionTestResult testGroup_h = testWorkloadFunction(true, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
+            System.out.println("The Time was: " + testGroup_h.getTime());
+            System.out.println("Throughput: " + testGroup_h.getThroughput());
+            for (int j = 0; j < 50; j++) {
+                System.out.println(testGroup_h.getThroughput().get(j));
+            }
+            System.out.println("Running row");
+            TransactionTestResult testGroup_r = testWorkloadFunction(false, columns, cols, 7500, rw[0], rw[1], probGroup, metadata, qp, password);
+            System.out.println("The Time was: " + testGroup_r.getTime());
+            System.out.println("Throughput: " + testGroup_r.getThroughput());
+            for (int j = 0; j < 50; j++) {
+                System.out.println(testGroup_r.getThroughput().get(j));
+            }
+        }
 
         updater.shutdown();
         return;
@@ -142,6 +141,9 @@ public class TransactionTests {
             table = metadata.createTable("WorkloadR" + read + "-" + write, cols, false);
         }
         tablePopulator(table, qp, recordLength, numRecords);
+
+        // Perform warm-up transactions
+        testGroupFunction(colGroups, numRecords, 5000, probabilities, table, qp, password);
 
         // normalize probabilities
         double sum = read + write;
@@ -350,11 +352,11 @@ public class TransactionTests {
     }
 
     public static boolean deleteDirectory(File directory) {
-        if(directory.exists()){
+        if (directory.exists()){
             File[] files = directory.listFiles();
-            if(null!=files){
-                for(int i=0; i<files.length; i++) {
-                    if(files[i].isDirectory()) {
+            if (null!=files){
+                for (int i = 0; i < files.length; i++) {
+                    if (files[i].isDirectory()) {
                         deleteDirectory(files[i]);
                     }
                     else {
@@ -363,6 +365,6 @@ public class TransactionTests {
                 }
             }
         }
-        return(directory.delete());
+        return (directory.delete());
     }
 }
