@@ -1,1 +1,5 @@
-A new column-partitioned database.
+# SchwarzmanDB: A Hybrid-Store DBMS Utilizing Cost-Benefit Analysis
+#### Marvin Qian, Frank Wu, Justin Zhang
+#### Yale University, Department of Computer Science
+
+Hybrid storage databases are becoming increasingly popular, as they combine the benefits of both row- and column-oriented data management. Deciding how to partition data across row- and column-based storage systems is extremely important for database administrators in order to optimize performance. This paper tackles this problem via a hybrid-store database system that utilizes a cost-benefit analysis algorithm to automatically and dynamically create column projections so that popular queries require a smaller file read. We present performance data on a set of different usage conditions and show that the system we are building, SchwarzmanDB, is faster than conventional row storage in many use cases and never performs worse than the conventional row storage system. With a fuller database implementation and further improvements to our cost-benefit analysis algorithm, SchwarzmanDB could be a viable alternative to and require less work for a database administrator than a traditional DBMS.
